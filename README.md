@@ -15,3 +15,28 @@ New to Mind maps? They are useful, aesthetic and cool! Read more about these spe
 * Not sure how to do stuff? [Check the docs.](https://github.com/lucienhetu/my-mind/wiki)
 * Have a feature request? [Open an issue.](https://github.com/lucienhetu/my-mind/issues)
 * Have an improvement? [Submit a pull request.](https://github.com/lucienhetu/my-mind/pulls)
+
+OBJECTIVE
+* Create a realtime collaborative workspace
+* Find external help : Participatory Culture Foundation (Asana)...
+* Users create a profile and once they are members of a community, they can submit ideas, comment and vote on other ideas, and the most popular ideas are prioritized at the top based on the number of votes the idea receives. Once a promising idea has been identified, ... The team can add more information to the idea, refine it, propose it to leadership and the best ones are selected using sophisticated decision matrix capabilities
+
+TODO LIST
+* Users mgmt
+  - Onboarding
+    - Adhesion  
+      - ID (for internal reference)
+      - Username (block offensive??)
+    - Help new users
+  - Authentication
+    - OpenAuth
+    - Facebook
+    - Google
+    - ...
+* Contribution
+  - ~~Replicate contribution~~
+  - Concurrency mgmt
+  - Node stages (draft, from draft to accepted, challenge accepted)
+  - Authorship and timestamp
+  
+  
