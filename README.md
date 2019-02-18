@@ -34,9 +34,9 @@ TODO LIST
     - Google
     - ...
 * Contribution
-  - ~~Replicate contribution~~
-  - Concurrency mgmt
-  - Node stages (draft, from draft to accepted, challenge accepted)
-  - Authorship and timestamp
+  - [x]~~Replicate contribution~~
+  - [ ] Concurrency mgmt
+  - [ ] Node stages (draft, from draft to accepted, challenge accepted)
+  - [ ] Authorship and timestamp
   
   
