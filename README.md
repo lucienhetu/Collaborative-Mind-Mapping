@@ -25,18 +25,18 @@ TODO LIST
 * Users mgmt
   - Onboarding
     - Adhesion  
-      - ID (for internal reference)
-      - Username (block offensive??)
-    - Help new users
+      - [ ] Create the forms for adhesion
+      - [ ] Integrate ID into nodes authorship (for internal reference)
+      - [ ] Username (block offensive??)
+    - [ ] Create document for new users
   - Authentication
     - OpenAuth
     - Facebook
     - Google
     - ...
 * Contribution
-  - [x]~~Replicate contribution~~
+  - [x] ~~Replicate contribution~~
   - [ ] Concurrency mgmt
   - [ ] Node stages (draft, from draft to accepted, challenge accepted)
-  - [ ] Authorship and timestamp
   
   
