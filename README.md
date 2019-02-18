@@ -28,12 +28,12 @@ TODO LIST
       - [ ] Create the forms for adhesion
       - [ ] Integrate ID into nodes authorship (for internal reference)
       - [ ] Username (block offensive??)
-    - [ ] Create document for new users
+    - [ ] \Create document for new users
   - Authentication
-    - OpenAuth
-    - Facebook
-    - Google
-    - ...
+    - [ ] Create the forms for authentication
+    - [ ] Support majors authentication providers (OpenAuth, Facebook, Google, ...)
+  - Preference
+    - [ ] \Remember open nodes
 * Contribution
   - [x] ~~Replicate contribution~~
   - [ ] Concurrency mgmt
