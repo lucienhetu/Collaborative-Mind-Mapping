@@ -31,9 +31,9 @@ TODO LIST
     - [ ] Create document for new users
   - Authentication
     - [ ] Create the forms for authentication
-    - [ ] \Support majors authentication providers (OpenAuth, Facebook, Google, ...)
+    - [ ] Support majors authentication providers (OpenAuth, Facebook, Google, ...)
   - Preference
-    - [ ] \Remember open nodes
+    - [ ] Remember open nodes
 * Contribution
   - [x] ~~Replicate contribution~~
   - [ ] Concurrency mgmt
