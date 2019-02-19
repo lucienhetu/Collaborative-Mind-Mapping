@@ -8,6 +8,7 @@ New to Mind maps? They are useful, aesthetic and cool! Read more about these spe
 * [Original project web page](http://my-mind.github.io/)
 * [News / Changelog](https://github.com/ondras/my-mind/wiki/News)
 * [Documentation](https://github.com/ondras/my-mind/wiki)
+* [Get started] (https://github.com/lucienhetu/my-mind/wiki)
 
 * Found a bug? [Open an issue.](https://github.com/lucienhetu/my-mind/issues)
 * Not sure how to do stuff? [Check the docs.](https://github.com/lucienhetu/my-mind/wiki)
