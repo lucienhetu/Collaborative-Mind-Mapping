@@ -2399,7 +2399,7 @@ MM.Layout.Graph._drawHorizontalConnectors = function(item, side, children) {
 
     if (children.length == 1) {
         var child = children[0];
-        var y2 = child.getShape().getVerticalAnchor(child) + child.getDOM().node.offsetTop;
+        var y2 = child.getShape().getVerticalAnchor(child) + child.getDOM().node.offsetTop - 1;
         var x2 = this._getChildAnchor(child, side);
         ctx.beginPath();
         ctx.moveTo(x1, y1);
