@@ -1678,6 +1678,9 @@ MM.Command.InsertChild.execute = function() {
 
     MM.publish("command-child");
 }
+MM.Command.InsertChild.isValid = function() {
+	return true;
+}
 
 MM.Command.Delete = Object.create(MM.Command, {
     label: { value: "Delete an item" },
