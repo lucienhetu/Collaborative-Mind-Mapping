@@ -4860,17 +4860,20 @@ MM.Mouse.init = function(port) {
     this._port.addEventListener("wheel", this);
     this._port.addEventListener("mousewheel", this);
     this._port.addEventListener("contextmenu", this);
+	this._port.addEventListener("mouseover", this);
 }
 
 MM.Mouse.handleEvent = function(e) {
     switch (e.type) {
-        case "click":
+        /*case "click":*/
+		case "mouseover":
             var item = MM.App.map.getItemFor(e.target);
             if (MM.App.editing && item == MM.App.current) { return; } /* ignore on edited node */
             if (item) { MM.App.select(item); }
             break;
 
-        case "dblclick":
+        case "click":
+		/*case "dblclick":*/
             var item = MM.App.map.getItemFor(e.target);
             if (item) { MM.Command.Edit.execute(); }
             break;
