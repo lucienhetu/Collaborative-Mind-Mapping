@@ -1802,7 +1802,7 @@ MM.Command.UI = Object.create(MM.Command, {
 MM.Command.UI.execute = function() {
     MM.App.ui.toggle();
 }
-
+/*
 MM.Command.Pan = Object.create(MM.Command, {
     label: { value: "Pan the map" },
     keys: {
@@ -1857,6 +1857,7 @@ MM.Command.Pan.handleEvent = function(e) {
         }
     }
 }
+*/
 
 MM.Command.Copy = Object.create(MM.Command, {
     label: { value: "Copy" },
@@ -3969,7 +3970,7 @@ MM.UI.Help.prototype.toggle = function() {
 
 MM.UI.Help.prototype._build = function() {
     var t = this._node.querySelector(".navigation");
-    this._buildRow(t, "Pan");
+    //this._buildRow(t, "Pan");
     this._buildRow(t, "Select");
     this._buildRow(t, "SelectRoot");
     this._buildRow(t, "SelectParent");
