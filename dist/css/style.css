@@ -3,7 +3,8 @@
 @import url(shape.css);
 @import url(menu.css);
 * {
-    font-family: source sans pro, sans-serif;
+	font-family: Geneva, Arial;
+	font-size: 10.5pt;			   
 }
 
 html,
@@ -11,7 +12,6 @@ body {
     margin: 0;
     overflow: hidden;
     height: 100%;
-    background-color: #eed;
     -webkit-user-select: none;
     /* no magnifier on hold */
 }
@@ -60,6 +60,11 @@ ul {
     transition: all 500ms;
 }
 
+/*
+#tip:before {
+	content: "Tip: ";
+}
+*/
 #tip.hidden {
     opacity: 0;
 }
