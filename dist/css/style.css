@@ -1,0 +1,100 @@
+@import url(ui.css);
+@import url(item.css);
+@import url(shape.css);
+@import url(menu.css);
+* {
+    font-family: source sans pro, sans-serif;
+}
+
+html,
+body {
+    margin: 0;
+    overflow: hidden;
+    height: 100%;
+    background-color: #eed;
+    -webkit-user-select: none;
+    /* no magnifier on hold */
+}
+
+[contenteditable] {
+    /* allow for editable items */
+    -webkit-user-select: auto;
+}
+
+ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+#port {
+    overflow: hidden;
+    font-size: 15px;
+}
+
+#throbber {
+    position: absolute;
+    top: 50px;
+    left: -60px;
+    width: 50px;
+    height: 50px;
+    background-image: url(throbber.gif);
+}
+
+#throbber:not(.visible) {
+    opacity: 0;
+}
+
+.ghost {
+    position: absolute !important;
+    /* to prevent collision with .content */
+    opacity: 0.5;
+    z-index: 1;
+}
+
+#tip {
+    position: fixed;
+    z-index: 1;
+    left: 10px;
+    bottom: 5px;
+    transition: all 500ms;
+}
+
+#tip.hidden {
+    opacity: 0;
+}
+
+#mymind_history {
+    position: fixed;
+    right: 6px;
+    bottom: 5px;
+    height: 45%;
+    z-index: 200;
+    width: 186px;
+    border: 2px solid #eed;
+    box-shadow: 0 0 2px 2px rgba(255, 255, 187, 0.9);
+    -webkit-transition: -webkit-transform 1000ms;
+    transition: transform 1000ms;
+    background: white;
+}
+
+#mymind_history ul {
+    padding: 5px 0 3px 10px;
+}
+
+#mymind_history #history_title h3 {
+    text-align: center;
+    color: #eed;
+    background: #34495e;
+    font-weight: 600;
+    padding-bottom: 3px;
+    text-transform: capitalize;
+    margin-top: 0;
+}
+
+#mymind_history ul li {
+    white-space: nowrap;
+    width: 11em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
