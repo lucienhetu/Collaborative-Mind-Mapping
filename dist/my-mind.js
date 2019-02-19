@@ -1906,7 +1906,7 @@ MM.Command.Paste.execute = function() {
 
 MM.Command.Fold = Object.create(MM.Command, {
     label: { value: "Fold/Unfold" },
-    keys: { value: [{ charCode: "f".charCodeAt(0), ctrlKey: false }] }
+    keys: { value: [{ charCode: " ".charCodeAt(0), ctrlKey: false }] }
 });
 MM.Command.Fold.execute = function() {
     var item = MM.App.current;
@@ -1917,7 +1917,7 @@ MM.Command.Edit = Object.create(MM.Command, {
     label: { value: "Edit item" },
     keys: {
         value: [
-            { keyCode: 32 },
+            //{ keyCode: 32 },
             { keyCode: 113 }
         ]
     }
