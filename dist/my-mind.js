@@ -494,7 +494,7 @@ MM.Item.prototype.update = function(doNotRecurse) {
     }
 
     this._updateStatus();
-    this._updateValue();
+    //this._updateValue();
 
     this._dom.node.classList[this._collapsed ? "add" : "remove"]("collapsed");
 
@@ -551,11 +551,11 @@ MM.Item.prototype.setValue = function(value) {
 MM.Item.prototype.getValue = function() {
     return this._value;
 }
-
+/*
 MM.Item.prototype.getComputedValue = function() {
     return this._computed.value;
 }
-
+*/
 MM.Item.prototype.setStatus = function(status) {
     this._status = status;
     return this.update();
@@ -797,6 +797,7 @@ MM.Item.prototype._updateStatus = function() {
     }
 }
 
+/*
 MM.Item.prototype._updateValue = function() {
     this._dom.value.style.display = "";
 
@@ -844,7 +845,7 @@ MM.Item.prototype._updateValue = function() {
     this._computed.value = result;
     this._dom.value.innerHTML = (Math.round(result) == result ? result : result.toFixed(3));
 }
-
+*/
 MM.Item.prototype._findLinks = function(node) {
 
     var children = [].slice.call(node.childNodes);
@@ -2019,7 +2020,7 @@ MM.Command.Strikethrough = Object.create(MM.Command.Style, {
     label: { value: "Strike-through" },
     keys: { value: [{ keyCode: "S".charCodeAt(0), ctrlKey: true }] }
 });
-
+/*
 MM.Command.Value = Object.create(MM.Command, {
     label: { value: "Set value" },
     keys: { value: [{ charCode: "v".charCodeAt(0), ctrlKey: false, metaKey: false }] }
@@ -2036,7 +2037,7 @@ MM.Command.Value.execute = function() {
     var action = new MM.Action.SetValue(item, isNaN(numValue) ? newValue : numValue);
     MM.App.action(action);
 }
-
+*/
 MM.Command.Yes = Object.create(MM.Command, {
     label: { value: "Yes" },
     keys: { value: [{ charCode: "y".charCodeAt(0), ctrlKey: false }] }
@@ -3883,19 +3884,19 @@ MM.UI.Value = function() {
 MM.UI.Value.prototype.update = function() {
     var value = MM.App.current.getValue();
     if (value === null) { value = ""; }
-    if (typeof(value) == "number") { value = "num" }
+    //if (typeof(value) == "number") { value = "num" }
 
     this._select.value = value;
 }
 
 MM.UI.Value.prototype.handleEvent = function(e) {
     var value = this._select.value;
-    if (value == "num") {
-        MM.Command.Value.execute();
-    } else {
+    //if (value == "num") {
+        //MM.Command.Value.execute();
+    //} else {
         var action = new MM.Action.SetValue(MM.App.current, value || null);
         MM.App.action(action);
-    }
+    //}
 }
 MM.UI.Status = function() {
     this._select = document.querySelector("#status");
@@ -3993,7 +3994,7 @@ MM.UI.Help.prototype._build = function() {
     this._buildRow(t, "Paste");
 
     var t = this._node.querySelector(".editing");
-    this._buildRow(t, "Value");
+//    this._buildRow(t, "Value");
     this._buildRow(t, "Yes", "No", "Computed");
     this._buildRow(t, "Edit");
     this._buildRow(t, "Newline");

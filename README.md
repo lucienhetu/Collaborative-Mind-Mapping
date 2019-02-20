@@ -36,7 +36,7 @@ TODO LIST
   - [x] ~~Integrate Horizon and RethinkDB~~
   - [x] ~~Modifications to nodes (aka contributions) are replicate to user in real-time~~
   - [ ] Concurrency mgmt
-  - [ ] Node stages (draft, from draft to accepted, challenge accepted, ACL)
+  - [ ] Node stages (draft, from draft to accepted, challenge accepted, ACL, Branching)
   
   
 ![Screenshot](screenshot.png)
