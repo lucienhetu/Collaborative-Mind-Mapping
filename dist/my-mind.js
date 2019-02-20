@@ -4879,9 +4879,10 @@ MM.Mouse.handleEvent = function(e) {
 
         case "click":
 		/*case "dblclick":*/
-            var item = MM.App.map.getItemFor(e.target);
-            if (item) { MM.Command.Edit.execute(); }
-            break;
+			var item = MM.App.map.getItemFor(e.target);
+			if (item != MM.App.current) { MM.App.select(item); }
+			else if (item) { MM.Command.Edit.execute(); }
+			break;
 
         case "contextmenu":
             this._endDrag();
