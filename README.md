@@ -21,8 +21,10 @@ OUR GOAL
  
 TODO LIST
 * Realtime collaboration capabilities
-  - [X] Push changes
-  - [ ] Integrate pushed changes
+  - [ ] Modifications to nodes, aka the contributions, are replicate to user in real-time~~
+    - [X] Push changes to clients
+      - [x] Integrate Horizon and RethinkDB
+    - [ ] Integrate pushed changes
 * Users mgmt
   - Onboarding
     - Adhesion  
@@ -36,8 +38,6 @@ TODO LIST
   - Preference
     - [ ] Remember open nodes
 * Contribution mgmt
-  - [x] ~~Integrate Horizon and RethinkDB~~
-  - [x] ~~Modifications to nodes (aka contributions) are replicate to user in real-time~~
   - [ ] Concurrency mgmt
   - [ ] Node stages (draft, from draft to accepted, challenge accepted, ACL, Branching)
   
