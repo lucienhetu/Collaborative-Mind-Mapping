@@ -18,10 +18,12 @@ OUR GOAL
 * Find external help : Participatory Culture Foundation (Asana)...
  
 TODO LIST
+* Store data in a local database
+  - [X] Integrate web app with RethinkDB
 * Realtime collaboration capabilities
   - [ ] Modifications to nodes, aka the contributions, are replicate to user in real-time
     - [X] Push changes to clients
-      - [x] Integrate Horizon and RethinkDB
+      - [x] Integrate Horizon 
     - [ ] Integrate pushed changes
 * Users mgmt
   - Onboarding
