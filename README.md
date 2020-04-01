@@ -1,7 +1,7 @@
-My Mind (collaborative edition)
+My Mind, collaborative edition
 ===============================
 
-My Mind is a web application for creating and managing Mind maps. It is free to use and you can fork its source code. It is distributed under the terms of the MIT license.
+My Mind is a web application for creating and managing mind maps. It is free to use and you can fork its source code. It is distributed under the terms of the MIT license.
 
 New to Mind maps? They are useful, aesthetic and cool! Read more about these special diagrams in [the Wikipedia article](http://en.wikipedia.org/wiki/Mind_map).
 
@@ -16,10 +16,13 @@ New to Mind maps? They are useful, aesthetic and cool! Read more about these spe
 * Have an improvement? [Submit a pull request.](https://github.com/lucienhetu/my-mind/pulls)
 
 OUR GOAL
-* Create a realtime collaborative workspace where users create a profile and once they are members of a community, they can submit ideas, comment and vote on other ideas, and the most popular ideas are prioritized at the top based on the number of votes the idea receives. Once a promising idea has been identified, ... The team can add more information to the idea, refine it, propose it to leadership and the best ones are selected using sophisticated decision matrix capabilities
+* Extend the original project to create a workspace where users create a profile and once they are members of a community, they can submit ideas, comment and vote on other ideas, and the most popular ideas are prioritized at the top based on the number of votes the idea receives. Once a promising idea has been identified, ... The team can add more information to the idea, refine it, propose it to leadership and the best ones are selected using sophisticated decision matrix capabilities
 * Find external help : Participatory Culture Foundation (Asana)...
-
+ 
 TODO LIST
+* Realtime collaboration capabilities
+  - [X] Push changes
+  - [ ] Integrate pushed changes
 * Users mgmt
   - Onboarding
     - Adhesion  
