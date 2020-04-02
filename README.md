@@ -38,6 +38,8 @@ TODO LIST
     - [ ] Support majors authentication providers (OpenAuth, Facebook, Google, ...)
   - Preference
     - [ ] Remember open nodes
+      - [ ] Save state
+      - [ ] Load state
 * Contribution mgmt
   - [ ] Concurrency mgmt
   - [ ] Node stages (draft, from draft to accepted, challenge accepted, ACL, Branching)
