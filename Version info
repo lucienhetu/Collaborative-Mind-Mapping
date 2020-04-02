@@ -1,0 +1,6 @@
+v0.4
+Store data in a local database > Integrate web app with RethinkDB
+Realtime collaboration capabilities > Changes are pushed to clients
+
+v0.4.1
+Remember open nodes > Save state
