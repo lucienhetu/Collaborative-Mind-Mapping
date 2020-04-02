@@ -5,11 +5,8 @@ My Mind is a web application for creating and managing mind maps. It is free to 
 
 
 * Get started : https://github.com/lucienhetu/my-mind/wiki
-* [News / Changelog] (https://github.com/lucienhetu/Collaborative-Mind-Mapping/blob/master/Version%20info)
-* New to Mind maps? They are useful, aesthetic and cool! Read more about these special diagrams in [the Wikipedia article](http://en.wikipedia.org/wiki/Mind_map).
-* Found a bug? [Open an issue.](https://github.com/lucienhetu/my-mind/issues)
-* Not sure how to do stuff? [Check the docs.](https://github.com/lucienhetu/my-mind/wiki)
-* Have a feature request? [Open an issue.](https://github.com/lucienhetu/my-mind/issues)
+* News / Changelog : https://github.com/lucienhetu/Collaborative-Mind-Mapping/blob/master/Version%20info
+* Found a bug or have a feature request? [Open an issue.](https://github.com/lucienhetu/my-mind/issues)
 * Have an improvement? [Submit a pull request.](https://github.com/lucienhetu/my-mind/pulls)
 
 OUR GOAL
