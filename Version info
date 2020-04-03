@@ -4,3 +4,5 @@ Realtime collaboration capabilities > Changes are pushed to clients
 
 v0.4.1
 Remember open nodes > Save state
+User identification (
+https://oauth.net/articles/authentication)
