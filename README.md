@@ -17,10 +17,10 @@ TODO LIST
 * Store data in a local database
   - [X] Integrate web app with RethinkDB
 * Realtime collaboration capabilities
-  - [ ] Modifications to nodes, aka the contributions, are replicate to user in real-time
+  - [x] Modifications to nodes, aka the contributions, are replicate to user in real-time
     - [X] Push changes to clients
       - [x] Integrate Horizon 
-    - [ ] Integrate pushed changes
+    - [x] Integrate pushed changes
 * Users mgmt
   - Onboarding
     - Adhesion  
@@ -34,7 +34,7 @@ TODO LIST
     - [ ] Support majors authentication providers (OpenAuth, Facebook, Google, ...)
   - Preference
     - [ ] Remember open nodes
-      - [ ] Save state
+      - [x] Save state
       - [ ] Load state
 * Contribution mgmt
   - [ ] Concurrency mgmt
