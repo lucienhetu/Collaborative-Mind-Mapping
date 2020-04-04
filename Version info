@@ -8,6 +8,7 @@ Remember open nodes > Save state
 Consume data from changefeed
 
 v0.5
+Got rid of some unused functions
 User identification
   http://web.archive.org/web/20171119002424/http://horizon.io/docs/auth
   https://oauth.net/articles/authentication
