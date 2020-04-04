@@ -3,7 +3,11 @@ Store data in a local database > Integrate web app with RethinkDB
 Realtime collaboration capabilities > Changes are pushed to clients
 
 v0.4.1
-Remember open nodes > Save state
+Remember open nodes > Save state 
+  ToBeDevelopped: Restore state
 Consume data from changefeed
-User identification (
-https://oauth.net/articles/authentication)
+
+v0.5
+User identification
+  http://web.archive.org/web/20171119002424/http://horizon.io/docs/auth
+  https://oauth.net/articles/authentication
