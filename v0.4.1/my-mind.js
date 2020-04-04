@@ -46,222 +46,9 @@ var MM = {
 	http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-/**
- * @class A promise - value to be resolved in the future.
- * Implements the "Promises/A+" specification.
- */
-var Promise = function() {
-    this._state = 0; /* 0 = pending, 1 = fulfilled, 2 = rejected */
-    this._value = null; /* fulfillment / rejection value */
 
-    this._cb = {
-        fulfilled: [],
-        rejected: []
-    }
 
-    this._thenPromises = []; /* promises returned by then() */
-}
-
-/**
- * @param {function} onFulfilled To be called once this promise gets fulfilled
- * @param {function} onRejected To be called once this promise gets rejected
- * @returns {Promise}
- */
-Promise.prototype.then = function(onFulfilled, onRejected) {
-    this._cb.fulfilled.push(onFulfilled);
-    this._cb.rejected.push(onRejected);
-
-    var thenPromise = new Promise();
-
-    this._thenPromises.push(thenPromise);
-
-    if (this._state > 0) {
-        setTimeout(this._processQueue.bind(this), 0);
-    }
-
-    /* 3.2.6. then must return a promise. */
-    return thenPromise;
-}
-
-/**
- * Fulfill this promise with a given value
- * @param {any} value
- */
-Promise.prototype.fulfill = function(value) {
-    if (this._state != 0) { return this; }
-
-    this._state = 1;
-    this._value = value;
-
-    this._processQueue();
-
-    return this;
-}
-
-/**
- * Reject this promise with a given value
- * @param {any} value
- */
-Promise.prototype.reject = function(value) {
-    if (this._state != 0) { return this; }
-
-    this._state = 2;
-    this._value = value;
-
-    this._processQueue();
-
-    return this;
-}
-
-/**
- * Pass this promise's resolved value to another promise
- * @param {Promise} promise
- */
-Promise.prototype.chain = function(promise) {
-    return this.then(promise.fulfill.bind(promise), promise.reject.bind(promise));
-}
-
-/**
- * @param {function} onRejected To be called once this promise gets rejected
- * @returns {Promise}
- */
-Promise.prototype["catch"] = function(onRejected) {
-    return this.then(null, onRejected);
-}
-
-Promise.prototype._processQueue = function() {
-    while (this._thenPromises.length) {
-        var onFulfilled = this._cb.fulfilled.shift();
-        var onRejected = this._cb.rejected.shift();
-        this._executeCallback(this._state == 1 ? onFulfilled : onRejected);
-    }
-}
-
-Promise.prototype._executeCallback = function(cb) {
-        var thenPromise = this._thenPromises.shift();
-
-        if (typeof(cb) != "function") {
-            if (this._state == 1) {
-                /* 3.2.6.4. If onFulfilled is not a function and promise1 is fulfilled, promise2 must be fulfilled with the same value. */
-                thenPromise.fulfill(this._value);
-            } else {
-                /* 3.2.6.5. If onRejected is not a function and promise1 is rejected, promise2 must be rejected with the same reason. */
-                thenPromise.reject(this._value);
-            }
-            return;
-        }
-
-        try {
-            var returned = cb(this._value);
-
-            if (returned && typeof(returned.then) == "function") {
-                /* 3.2.6.3. If either onFulfilled or onRejected returns a promise (call it returnedPromise), promise2 must assume the state of returnedPromise */
-                var fulfillThenPromise = function(value) { thenPromise.fulfill(value); }
-                var rejectThenPromise = function(value) { thenPromise.reject(value); }
-                returned.then(fulfillThenPromise, rejectThenPromise);
-            } else {
-                /* 3.2.6.1. If either onFulfilled or onRejected returns a value that is not a promise, promise2 must be fulfilled with that value. */
-                thenPromise.fulfill(returned);
-            }
-
-        } catch (e) {
-
-            /* 3.2.6.2. If either onFulfilled or onRejected throws an exception, promise2 must be rejected with the thrown exception as the reason. */
-            thenPromise.reject(e);
-
-        }
-    }
-    /**
-     * Wait for all these promises to complete. One failed => this fails too.
-     */
-Promise.all = Promise.when = function(all) {
-    var promise = new this();
-    var counter = 0;
-    var results = [];
-
-    for (var i = 0; i < all.length; i++) {
-        counter++;
-        all[i].then(function(index, result) {
-            results[index] = result;
-            counter--;
-            if (!counter) { promise.fulfill(results); }
-        }.bind(null, i), function(reason) {
-            counter = 1 / 0;
-            promise.reject(reason);
-        });
-    }
-
-    return promise;
-}
-
-/**
- * Promise-based version of setTimeout
- */
-Promise.setTimeout = function(ms) {
-    var promise = new this();
-    setTimeout(function() { promise.fulfill(); }, ms);
-    return promise;
-}
-
-/**
- * Promise-based version of addEventListener
- */
-Promise.event = function(element, event, capture) {
-    var promise = new this();
-    var cb = function(e) {
-        element.removeEventListener(event, cb, capture);
-        promise.fulfill(e);
-    }
-    element.addEventListener(event, cb, capture);
-    return promise;
-}
-
-/**
- * Promise-based wait for CSS transition end
- */
-Promise.transition = function(element) {
-    if ("transition" in element.style) {
-        return this.event(element, "transitionend", false);
-    } else if ("webkitTransition" in element.style) {
-        return this.event(element, "webkitTransitionEnd", false);
-    } else {
-        return new this().fulfill();
-    }
-}
-
-/**
- * Promise-based version of XMLHttpRequest::send
- */
-Promise.send = function(xhr, data) {
-    var promise = new this();
-    xhr.addEventListener("readystatechange", function(e) {
-        if (e.target.readyState != 4) { return; }
-        if (e.target.status.toString().charAt(0) == "2") {
-            promise.fulfill(e.target);
-        } else {
-            promise.reject(e.target);
-        }
-    });
-    xhr.send(data);
-    return promise;
-}
-
-Promise.worker = function(url, message) {
-        var promise = new this();
-        var worker = new Worker(url);
-        Promise.event(worker, "message").then(function(e) {
-            promise.fulfill(e.data);
-        });
-        Promise.event(worker, "error").then(function(e) {
-            promise.reject(e.message);
-        });
-        worker.postMessage(message);
-        return promise;
-    }
-    /**
-     * Prototype for all things categorizable: shapes, layouts, commands, formats, backends...
-     */
-MM.Repo = {
+ MM.Repo = {
     id: "", /* internal ID */
     label: "", /* human-readable label */
     getAll: function() {
@@ -516,13 +303,6 @@ MM.Item.prototype.setText = function(text) {
     return this.update();
 }
 
-MM.Item.prototype.setId = function(id) {
-	console.log("up there")
-	console.log(this);
-    this._id = id;
-    return this.update();
-}
-
 MM.Item.prototype.getId = function() {
     return this._id;
 }
@@ -556,11 +336,7 @@ MM.Item.prototype.setValue = function(value) {
 MM.Item.prototype.getValue = function() {
     return this._value;
 }
-/*
-MM.Item.prototype.getComputedValue = function() {
-    return this._computed.value;
-}
-*/
+
 MM.Item.prototype.setStatus = function(status) {
     this._status = status;
     return this.update();
@@ -797,56 +573,6 @@ MM.Item.prototype._updateStatus = function() {
             break;
     }
 }
-
-/*
-MM.Item.prototype._updateValue = function() {
-    this._dom.value.style.display = "";
-
-    if (typeof(this._value) == "number") {
-        this._computed.value = this._value;
-        this._dom.value.innerHTML = this._value;
-        return;
-    }
-
-    var childValues = this._children.map(function(child) {
-        return child.getComputedValue();
-    });
-
-    var result = 0;
-    switch (this._value) {
-        case "sum":
-            result = childValues.reduce(function(prev, cur) {
-                return prev + cur;
-            }, 0);
-            break;
-
-        case "avg":
-            var sum = childValues.reduce(function(prev, cur) {
-                return prev + cur;
-            }, 0);
-            result = (childValues.length ? sum / childValues.length : 0);
-            break;
-
-        case "max":
-            result = Math.max.apply(Math, childValues);
-            break;
-
-        case "min":
-            result = Math.min.apply(Math, childValues);
-            break;
-
-        default:
-            this._computed.value = 0;
-            this._dom.value.innerHTML = "";
-            this._dom.value.style.display = "none";
-            return;
-            break;
-    }
-
-    this._computed.value = result;
-    this._dom.value.innerHTML = (Math.round(result) == result ? result : result.toFixed(3));
-}
-*/
 
 MM.Item.prototype._findLinks = function(node) {
 
@@ -1238,7 +964,7 @@ MM.Action.InsertNewItem = function(parent, index) {
     this._parent = parent;
     this._index = index;
     this._item = new MM.Item();
-    MM.UI.Backend.File.storeRethinkDBFromJson("InsertNewItem", this);
+    MM.UI.Backend.storeRethinkDBFromJson("InsertNewItem", this);
 }
 MM.Action.InsertNewItem.prototype = Object.create(MM.Action.prototype);
 MM.Action.InsertNewItem.prototype.perform = function() {
@@ -1284,7 +1010,6 @@ MM.Action.MoveItem = function(item, newParent, newIndex, newSide) {
     this._item = item;
     this._newParent = newParent;
     this._newIndex = (arguments.length < 3 ? null : newIndex);
-console.log("LOG:: " + this._newIndex)
     this._newSide = newSide || "";
     this._oldParent = item.getParent();
     this._oldIndex = this._oldParent.getChildren().indexOf(item);
@@ -1299,7 +1024,7 @@ MM.Action.MoveItem.prototype.perform = function() {
         this._newParent.insertChild(this._item, this._newIndex);
     }
     MM.App.select(this._item);
-    MM.UI.Backend.File.storeRethinkDBFromJson("MoveItem", this);
+    MM.UI.Backend.storeRethinkDBFromJson("MoveItem", this);
 }
 MM.Action.MoveItem.prototype.undo = function() {
     this._item.setSide(this._oldSide);
@@ -1422,6 +1147,9 @@ MM.Action.SetStatus.prototype.undo = function() {
     this._item.getMap().update();
 }
 
+
+
+
 MM.Action.InsertNewItemFromPeer = function(id, parent, index) {
     this._id = id;
     this._parent = parent;
@@ -1433,6 +1161,28 @@ MM.Action.InsertNewItemFromPeer.prototype.perform = function() {
     this._item = this._parent.insertChild(this._item, this._index);
     this._item._id = this._id;
 }
+
+
+
+MM.Action.MoveItemFromPeer = function(item, newParent, newIndex) {
+    this._item = item;
+    this._newParent = newParent;
+    this._newIndex = newIndex;
+    this._oldParent = item.getParent();
+    this._oldIndex = this._oldParent.getChildren().indexOf(item);
+}
+MM.Action.MoveItemFromPeer.prototype = Object.create(MM.Action.prototype);
+MM.Action.MoveItemFromPeer.prototype.perform = function() {
+    if (this._newIndex === null) {
+        this._newParent.insertChild(this._item);
+    } else {
+        this._newParent.insertChild(this._item, this._newIndex);
+    }
+}
+
+
+
+
 MM.Action.SetTextFromPeer = function(item, text) {
     this._item = item;
     this._text = text;
@@ -1714,7 +1464,7 @@ MM.Command.Delete.isValid = function() {
 MM.Command.Delete.execute = function() {
     var action = new MM.Action.RemoveItem(MM.App.current);
     MM.App.action(action);
-    MM.UI.Backend.File.storeRethinkDBFromJson("Delete", action);
+    MM.UI.Backend.storeRethinkDBFromJson("Delete", action);
 }
 
 MM.Command.Swap = Object.create(MM.Command, {
@@ -1828,70 +1578,13 @@ MM.Command.UI.execute = function() {
     MM.App.ui.toggle();
 }
 
-MM.Command.Pan = Object.create(MM.Command, {
-    label: { value: "Pan the map" },
-    keys: {
-        value: [
-            { keyCode: "W".charCodeAt(0), ctrlKey: false, altKey: false, metaKey: false },
-            { keyCode: "A".charCodeAt(0), ctrlKey: false, altKey: false, metaKey: false },
-            { keyCode: "S".charCodeAt(0), ctrlKey: false, altKey: false, metaKey: false },
-            { keyCode: "D".charCodeAt(0), ctrlKey: false, altKey: false, metaKey: false }
-        ]
-    },
-    chars: { value: [] }
-});
-MM.Command.Pan.execute = function(e) {
-    var ch = String.fromCharCode(e.keyCode);
-    var index = this.chars.indexOf(ch);
-    if (index > -1) { return; }
-
-    if (!this.chars.length) {
-        window.addEventListener("keyup", this);
-        this.interval = setInterval(this._step.bind(this), 50);
-    }
-
-    this.chars.push(ch);
-    this._step();
-}
-
-MM.Command.Pan._step = function() {
-    var dirs = {
-        "W": [0, 1],
-        "A": [1, 0],
-        "S": [0, -1],
-        "D": [-1, 0]
-    }
-    var offset = [0, 0];
-
-    this.chars.forEach(function(ch) {
-        offset[0] += dirs[ch][0];
-        offset[1] += dirs[ch][1];
-    });
-
-    MM.App.map.moveBy(15 * offset[0], 15 * offset[1]);
-}
-
-MM.Command.Pan.handleEvent = function(e) {
-    var ch = String.fromCharCode(e.keyCode);
-    var index = this.chars.indexOf(ch);
-    if (index > -1) {
-        this.chars.splice(index, 1);
-        if (!this.chars.length) {
-            window.removeEventListener("keyup", this);
-            clearInterval(this.interval);
-        }
-    }
-}
-
 MM.Command.Copy = Object.create(MM.Command, {
     label: { value: "Copy" },
     prevent: { value: false },
-    keys: {
-        value: [
+    keys: {value: [
             { keyCode: "C".charCodeAt(0), ctrlKey: true },
             { keyCode: "C".charCodeAt(0), metaKey: true }
-        ]
-    }
+        ]}
 });
 MM.Command.Copy.execute = function() {
     MM.Clipboard.copy(MM.App.current);
@@ -1900,12 +1593,10 @@ MM.Command.Copy.execute = function() {
 MM.Command.Cut = Object.create(MM.Command, {
     label: { value: "Cut" },
     prevent: { value: false },
-    keys: {
-        value: [
+    keys: {value: [
             { keyCode: "X".charCodeAt(0), ctrlKey: true },
             { keyCode: "X".charCodeAt(0), metaKey: true }
-        ]
-    }
+        ]}
 });
 MM.Command.Cut.execute = function() {
     MM.Clipboard.cut(MM.App.current);
@@ -1914,12 +1605,10 @@ MM.Command.Cut.execute = function() {
 MM.Command.Paste = Object.create(MM.Command, {
     label: { value: "Paste" },
     prevent: { value: false },
-    keys: {
-        value: [
+    keys: {value: [
             { keyCode: "V".charCodeAt(0), ctrlKey: true },
             { keyCode: "V".charCodeAt(0), metaKey: true }
-        ]
-    }
+        ]}
 });
 MM.Command.Paste.execute = function() {
     MM.Clipboard.paste(MM.App.current);
@@ -1932,22 +1621,20 @@ MM.Command.Fold = Object.create(MM.Command, {
 MM.Command.Fold.execute = function() {
     var item = MM.App.current;
     if (item.isCollapsed()) { 
-		MM.UI.Backend.File.storeRethinkDBFromJson("pref_show", item);
+		MM.UI.Backend.storeRethinkDBFromJson("pref_show", item);
 		item.expand(); 
 	} else { 
-		MM.UI.Backend.File.storeRethinkDBFromJson("pref_hide", item);
+		MM.UI.Backend.storeRethinkDBFromJson("pref_hide", item);
 		item.collapse(); 
 	}
     MM.App.map.ensureItemVisibility(item);
 }
 MM.Command.Edit = Object.create(MM.Command, {
     label: { value: "Edit item" },
-    keys: {
-        value: [
+    keys: {value: [
             //{ keyCode: 32 },
             { keyCode: 113 }
-        ]
-    }
+        ]}
 });
 MM.Command.Edit.execute = function() {
     MM.App.current.startEditing();
@@ -1964,22 +1651,20 @@ MM.Command.Finish.execute = function() {
     var text = MM.App.current.stopEditing();
     if (text) {
         var action = new MM.Action.SetText(MM.App.current, text);
+		MM.UI.Backend.storeRethinkDBFromJson("EditText", action);
     } else {
         var action = new MM.Action.RemoveItem(MM.App.current);
+		 MM.UI.Backend.storeRethinkDBFromJson("Delete", action);
     }
     MM.App.action(action);
-//TODO_bug: ajuster - si removeItem
-    MM.UI.Backend.File.storeRethinkDBFromJson("EditText", action);
 }
 
 MM.Command.Newline = Object.create(MM.Command, {
     label: { value: "Line break" },
-    keys: {
-        value: [
+    keys: {value: [
             { keyCode: 13, shiftKey: true },
             { keyCode: 13, ctrlKey: true }
-        ]
-    },
+        ]},
     editMode: { value: true }
 });
 MM.Command.Newline.execute = function() {
@@ -2065,50 +1750,14 @@ MM.Command.Value.execute = function() {
     var action = new MM.Action.SetValue(item, isNaN(numValue) ? newValue : numValue);
     MM.App.action(action);
 }
-/*
-MM.Command.Yes = Object.create(MM.Command, {
-    label: { value: "Yes" },
-    keys: { value: [{ charCode: "y".charCodeAt(0), ctrlKey: false }] }
-});
-MM.Command.Yes.execute = function() {
-    var item = MM.App.current;
-    var status = (item.getStatus() == "yes" ? null : "yes");
-    var action = new MM.Action.SetStatus(item, status);
-    MM.App.action(action);
-}
-
-MM.Command.No = Object.create(MM.Command, {
-    label: { value: "No" },
-    keys: { value: [{ charCode: "n".charCodeAt(0), ctrlKey: false }] }
-});
-MM.Command.No.execute = function() {
-    var item = MM.App.current;
-    var status = (item.getStatus() == "no" ? null : "no");
-    var action = new MM.Action.SetStatus(item, status);
-    MM.App.action(action);
-}
-
-MM.Command.Computed = Object.create(MM.Command, {
-    label: { value: "Computed" },
-    keys: { value: [{ charCode: "c".charCodeAt(0), ctrlKey: false, metaKey: false }] }
-});
-MM.Command.Computed.execute = function() {
-    var item = MM.App.current;
-    var status = (item.getStatus() == "computed" ? null : "computed");
-    var action = new MM.Action.SetStatus(item, status);
-    MM.App.action(action);
-}
-*/
 MM.Command.Select = Object.create(MM.Command, {
     label: { value: "Move selection" },
-    keys: {
-        value: [
+    keys: {value: [
             { keyCode: 38, ctrlKey: false },
             { keyCode: 37, ctrlKey: false },
             { keyCode: 40, ctrlKey: false },
             { keyCode: 39, ctrlKey: false }
-        ]
-    }
+        ]}
 });
 MM.Command.Select.execute = function(e) {
     var dirs = {
@@ -2645,7 +2294,7 @@ MM.Layout.Tree._drawLines = function(item, side) {
     ctx.moveTo(x, y1);
     ctx.lineTo(x, y2 - R);
 
-    /* rounded connectors */
+    // rounded connectors
     for (var i = 0; i < children.length; i++) {
         var c = children[i];
         var y = c.getShape().getVerticalAnchor(c) + c.getDOM().node.offsetTop;
@@ -2684,7 +2333,7 @@ MM.Layout.Map.getChildDirection = function(child) {
     while (!child.getParent().isRoot()) {
         child = child.getParent();
     }
-    /* child is now the sub-root node */
+    // child is now the sub-root node 
 
     var side = child.getSide();
     if (side) { return side; }
@@ -2861,32 +2510,17 @@ MM.Shape.Ellipse = Object.create(MM.Shape, {
     id: { value: "ellipse" },
     label: { value: "Ellipse" }
 });
+
+
 MM.Format = Object.create(MM.Repo, {
     extension: { value: "" },
     mime: { value: "" }
 });
 
-MM.Format.getByName = function(name) {
-    var index = name.lastIndexOf(".");
-    if (index == -1) { return null; }
-    var extension = name.substring(index + 1).toLowerCase();
-    return this.getByProperty("extension", extension);
-}
-
-MM.Format.getByMime = function(mime) {
-    return this.getByProperty("mime", mime);
-}
-
-MM.Format.to = function(data) {}
-MM.Format.from = function(data) {}
-
-MM.Format.nl2br = function(str) {
-    return str.replace(/\n/g, "<br/>");
-}
-
 MM.Format.br2nl = function(str) {
     return str.replace(/<br\s*\/?>/g, "\n");
 }
+
 MM.Format.JSON = Object.create(MM.Format, {
     id: { value: "json" },
     label: { value: "Native (JSON)" },
@@ -2902,346 +2536,6 @@ MM.Format.JSON.from = function(data) {
     return JSON.parse(data);
 }
 
-MM.Format.FreeMind = Object.create(MM.Format, {
-    id: { value: "freemind" },
-    label: { value: "FreeMind" },
-    extension: { value: "mm" },
-    mime: { value: "application/x-freemind" }
-});
-
-MM.Format.FreeMind.to = function(data) {
-    var doc = document.implementation.createDocument("", "", null);
-    var map = doc.createElement("map");
-
-    map.setAttribute("version", "0.9.0");
-    map.appendChild(this._serializeItem(doc, data.root));
-
-    doc.appendChild(map);
-    var serializer = new XMLSerializer();
-    return serializer.serializeToString(doc);
-}
-
-MM.Format.FreeMind.from = function(data) {
-    var parser = new DOMParser();
-    var doc = parser.parseFromString(data, "application/xml");
-    if (doc.documentElement.nodeName.toLowerCase() == "parsererror") { throw new Error(doc.documentElement.textContent); }
-
-    var root = doc.documentElement.getElementsByTagName("node")[0];
-    if (!root) { throw new Error("No root node found"); }
-
-    var json = {
-        root: this._parseNode(root, { shape: "underline" })
-    };
-    json.root.layout = "map";
-    json.root.shape = "ellipse";
-
-    return json;
-}
-
-MM.Format.FreeMind._serializeItem = function(doc, json) {
-    var elm = this._serializeAttributes(doc, json);
-
-    (json.children || []).forEach(function(child) {
-        elm.appendChild(this._serializeItem(doc, child));
-    }, this);
-
-    return elm;
-}
-
-MM.Format.FreeMind._serializeAttributes = function(doc, json) {
-    var elm = doc.createElement("node");
-    elm.setAttribute("TEXT", MM.Format.br2nl(json.text));
-    elm.setAttribute("ID", json.id);
-
-    if (json.side) { elm.setAttribute("POSITION", json.side); }
-    if (json.shape == "box") { elm.setAttribute("STYLE", "bubble"); }
-    if (json.collapsed) { elm.setAttribute("FOLDED", "true"); }
-
-    return elm;
-}
-
-MM.Format.FreeMind._parseNode = function(node, parent) {
-    var json = this._parseAttributes(node, parent);
-
-    for (var i = 0; i < node.childNodes.length; i++) {
-        var child = node.childNodes[i];
-        if (child.nodeName.toLowerCase() == "node") {
-            json.children.push(this._parseNode(child, json));
-        }
-    }
-
-    return json;
-}
-
-MM.Format.FreeMind._parseAttributes = function(node, parent) {
-    var json = {
-        children: [],
-        text: MM.Format.nl2br(node.getAttribute("TEXT") || ""),
-        id: node.getAttribute("ID")
-    };
-
-    var position = node.getAttribute("POSITION");
-    if (position) { json.side = position; }
-
-    var style = node.getAttribute("STYLE");
-    if (style == "bubble") {
-        json.shape = "box";
-    } else {
-        json.shape = parent.shape;
-    }
-
-    if (node.getAttribute("FOLDED") == "true") { json.collapsed = 1; }
-
-    var children = node.children;
-    for (var i = 0; i < children.length; i++) {
-        var child = children[i];
-        switch (child.nodeName.toLowerCase()) {
-            case "richcontent":
-                var body = child.querySelector("body > *");
-                if (body) {
-                    var serializer = new XMLSerializer();
-                    json.text = serializer.serializeToString(body).trim();
-                }
-                break;
-
-            case "font":
-                if (child.getAttribute("ITALIC") == "true") { json.text = "<i>" + json.text + "</i>"; }
-                if (child.getAttribute("BOLD") == "true") { json.text = "<b>" + json.text + "</b>"; }
-                break;
-        }
-    }
-
-    return json;
-}
-MM.Format.MMA = Object.create(MM.Format.FreeMind, {
-    id: { value: "mma" },
-    label: { value: "Mind Map Architect" },
-    extension: { value: "mma" }
-});
-
-MM.Format.MMA._parseAttributes = function(node, parent) {
-    var json = {
-        children: [],
-        text: MM.Format.nl2br(node.getAttribute("title") || ""),
-        shape: "box"
-    };
-
-    if (node.getAttribute("expand") == "false") { json.collapsed = 1; }
-
-    var direction = node.getAttribute("direction");
-    if (direction == "0") { json.side = "left"; }
-    if (direction == "1") { json.side = "right"; }
-
-    var color = node.getAttribute("color");
-    if (color) {
-        var re = color.match(/^#(....)(....)(....)$/);
-        if (re) {
-            var r = parseInt(re[1], 16) >> 8;
-            var g = parseInt(re[2], 16) >> 8;
-            var b = parseInt(re[3], 16) >> 8;
-            r = Math.round(r / 17).toString(16);
-            g = Math.round(g / 17).toString(16);
-            b = Math.round(b / 17).toString(16);
-        }
-        json.color = "#" + [r, g, b].join("");
-    }
-
-
-    return json;
-}
-
-MM.Format.MMA._serializeAttributes = function(doc, json) {
-    var elm = doc.createElement("node");
-    elm.setAttribute("title", MM.Format.br2nl(json.text));
-    elm.setAttribute("expand", json.collapsed ? "false" : "true");
-
-    if (json.side) { elm.setAttribute("direction", json.side == "left" ? "0" : "1"); }
-    if (json.color) {
-        var parts = json.color.match(/^#(.)(.)(.)$/);
-        var r = new Array(5).join(parts[1]);
-        var g = new Array(5).join(parts[2]);
-        var b = new Array(5).join(parts[3]);
-        elm.setAttribute("color", "#" + [r, g, b].join(""));
-    }
-
-    return elm;
-}
-MM.Format.Mup = Object.create(MM.Format, {
-    id: { value: "mup" },
-    label: { value: "MindMup" },
-    extension: { value: "mup" }
-});
-
-MM.Format.Mup.to = function(data) {
-    var root = this._MMtoMup(data.root);
-    return JSON.stringify(root, null, 2);
-}
-
-MM.Format.Mup.from = function(data) {
-    var source = JSON.parse(data);
-    var root = this._MupToMM(source);
-    root.layout = "map";
-
-    var map = {
-        root: root
-    }
-
-    return map;
-}
-
-MM.Format.Mup._MupToMM = function(item) {
-    var json = {
-        text: MM.Format.nl2br(item.title),
-        id: item.id,
-        shape: "box"
-    }
-
-    if (item.attr && item.attr.style && item.attr.style.background) {
-        json.color = item.attr.style.background;
-    }
-
-    if (item.attr && item.attr.collapsed) {
-        json.collapsed = 1;
-    }
-
-    if (item.ideas) {
-        var data = [];
-        for (var key in item.ideas) {
-            var child = this._MupToMM(item.ideas[key]);
-            var num = parseFloat(key);
-            child.side = (num < 0 ? "left" : "right");
-            data.push({
-                child: child,
-                num: num
-            });
-        }
-
-        data.sort(function(a, b) {
-            return a.num - b.num;
-        });
-
-        json.children = data.map(function(item) { return item.child; });
-    }
-
-    return json;
-}
-
-MM.Format.Mup._MMtoMup = function(item, side) {
-    var result = {
-        id: item.id,
-        title: MM.Format.br2nl(item.text),
-        attr: {}
-    }
-    if (item.color) {
-        result.attr.style = { background: item.color };
-    }
-    if (item.collapsed) {
-        result.attr.collapsed = true;
-    }
-
-    if (item.children) {
-        result.ideas = {};
-
-        for (var i = 0; i < item.children.length; i++) {
-            var child = item.children[i];
-            var childSide = side || child.side;
-
-            var key = i + 1;
-            if (childSide == "left") { key *= -1; }
-
-            result.ideas[key] = this._MMtoMup(child, childSide);
-        }
-    }
-
-    return result;
-}
-
-MM.Format.Plaintext = Object.create(MM.Format, {
-    id: { value: "plaintext" },
-    label: { value: "Plain text" },
-    extension: { value: "txt" },
-    mime: { value: "application/vnd.mymind+txt" }
-});
-
-/**
- * Can serialize also a sub-tree
- */
-MM.Format.Plaintext.to = function(data) {
-    return this._serializeItem(data.root || data);
-}
-
-MM.Format.Plaintext.from = function(data) {
-    var lines = data.split("\n").filter(function(line) {
-        return line.match(/\S/);
-    });
-
-    var items = this._parseItems(lines);
-
-    if (items.length == 1) {
-        var result = {
-            root: items[0]
-        }
-    } else {
-        var result = {
-            root: {
-                text: "",
-                children: items
-            }
-        }
-    }
-    result.root.layout = "map";
-
-    return result;
-}
-
-MM.Format.Plaintext._serializeItem = function(item, depth) {
-    depth = depth || 0;
-
-    var lines = (item.children || []).map(function(child) {
-        return this._serializeItem(child, depth + 1);
-    }, this);
-
-    var prefix = new Array(depth + 1).join("\t");
-    lines.unshift(prefix + item.text.replace(/\n/g, ""));
-
-    return lines.join("\n") + (depth ? "" : "\n");
-}
-
-
-MM.Format.Plaintext._parseItems = function(lines) {
-    var items = [];
-    if (!lines.length) { return items; }
-    var firstPrefix = this._parsePrefix(lines[0]);
-
-    var currentItem = null;
-    var childLines = [];
-
-    // finalize a block of sub-children by converting them to items and appending 
-    var convertChildLinesToChildren = function() {
-        if (!currentItem || !childLines.length) { return; }
-        var children = this._parseItems(childLines);
-        if (children.length) { currentItem.children = children; }
-        childLines = [];
-    }
-
-    lines.forEach(function(line, index) {
-        if (this._parsePrefix(line) == firstPrefix) { // new top-level item! 
-            convertChildLinesToChildren.call(this); // finalize previous item 
-            currentItem = { text: line.match(/^\s*(.*)/)[1] };
-            items.push(currentItem);
-        } else { // prepare as a future child 
-            childLines.push(line);
-        }
-    }, this);
-
-    convertChildLinesToChildren.call(this);
-
-    return items;
-}
-
-MM.Format.Plaintext._parsePrefix = function(line) {
-    return line.match(/^\s*/)[0];
-}
 MM.Backend = Object.create(MM.Repo);
 
 /**
@@ -3255,6 +2549,7 @@ MM.Backend.save = function(data, name) {}
 
 MM.Backend.load = function(name) {}
 
+/*
 MM.Backend.File = Object.create(MM.Backend, {
     id: { value: "file" },
     label: { value: "File" },
@@ -3268,231 +2563,12 @@ MM.Backend.File.save = function(data, name) {
     document.body.appendChild(link);
     link.click();
     link.parentNode.removeChild(link);
-
-    var promise = new Promise().fulfill();
-    return promise;
 }
 
 MM.Backend.File.load = function() {
-    var promise = new Promise();
-
-    this.input.type = "file";
-
-    this.input.onchange = function(e) {
-        var file = e.target.files[0];
-        if (!file) { return; }
-
-        var reader = new FileReader();
-        reader.onload = function() { promise.fulfill({ data: reader.result, name: file.name }); }
-        reader.onerror = function() { promise.reject(reader.error); }
-        reader.readAsText(file);
-    }.bind(this);
-
-    this.input.click();
-    return promise;
+//TODO: delete function
 }
-
-MM.Backend.Horizon = Object.create(MM.Backend, {
-    label: { value: "Horizon" },
-    id: { value: "horizon" },
-    ref: { value: null, writable: true },
-    _current: {
-        value: {
-            id: null,
-            name: null,
-            data: null
-        }
-    }
-});
-
-MM.Backend.Horizon.connect = function(server, auth) {
-    this.ref = new Horizon("https://" + server + ".Horizonio.com/");
-
-    this.ref.child("names").on("value", function(snap) {
-        MM.publish("horizon-list", this, snap.val() || {});
-    }, this);
-
-    if (auth) {
-        return this._login(auth);
-    } else {
-        return new Promise().fulfill();
-    }
-}
-
-MM.Backend.Horizon.save = function(data, id, name) {
-    var promise = new Promise();
-
-    try {
-        this.ref.child("names/" + id).set(name);
-        this.ref.child("data/" + id).set(data, function(result) {
-            if (result) {
-                promise.reject(result);
-            } else {
-                promise.fulfill();
-                this._listenStart(data, id);
-            }
-        }.bind(this));
-    } catch (e) {
-        promise.reject(e);
-    }
-    return promise;
-}
-
-MM.Backend.Horizon.load = function(id) {
-    var promise = new Promise();
-
-    this.ref.child("data/" + id).once("value", function(snap) {
-        var data = snap.val();
-        if (data) {
-            promise.fulfill(data);
-            this._listenStart(data, id);
-        } else {
-            promise.reject(new Error("There is no such saved map"));
-        }
-    }, this);
-    return promise;
-}
-
-MM.Backend.Horizon.remove = function(id) {
-    var promise = new Promise();
-
-    try {
-        this.ref.child("names/" + id).remove();
-        this.ref.child("data/" + id).remove(function(result) {
-            if (result) {
-                promise.reject(result);
-            } else {
-                promise.fulfill();
-            }
-        });
-    } catch (e) {
-        promise.reject(e);
-    }
-
-    return promise;
-}
-
-MM.Backend.Horizon.reset = function() {
-    this._listenStop(); /* do not monitor current Horizon ref for changes */
-}
-
-/**
- * Merge current (remote) data with updated map
- */
-MM.Backend.Horizon.mergeWith = function(data, name) {
-    var id = this._current.id;
-
-    if (name != this._current.name) {
-        this._current.name = name;
-        this.ref.child("names/" + id).set(name);
-    }
-
-
-    var dataRef = this.ref.child("data/" + id);
-    var oldData = this._current.data;
-
-    this._listenStop();
-    this._recursiveRefMerge(dataRef, oldData, data);
-    this._listenStart(data, id);
-}
-
-/**
- * @param {Horizon} ref
- * @param {object} oldData
- * @param {object} newData
- */
-MM.Backend.Horizon._recursiveRefMerge = function(ref, oldData, newData) {
-    var updateObject = {};
-
-    if (newData instanceof Array) { /* merge arrays */
-
-        for (var i = 0; i < newData.length; i++) {
-            var newValue = newData[i];
-
-            if (!(i in oldData)) { /* new key */
-                updateObject[i] = newValue;
-            } else if (typeof(newValue) == "object") { /* recurse */
-                this._recursiveRefMerge(ref.child(i), oldData[i], newValue);
-            } else if (newValue !== oldData[i]) { /* changed key */
-                updateObject[i] = newValue;
-            }
-        }
-
-        for (var i = newData.length; i < oldData.length; i++) { updateObject[i] = null; } /* removed array items */
-
-    } else { /* merge objects */
-
-        for (var p in newData) { /* new/changed keys */
-            var newValue = newData[p];
-
-            if (!(p in oldData)) { /* new key */
-                updateObject[p] = newValue;
-            } else if (typeof(newValue) == "object") { /* recurse */
-                this._recursiveRefMerge(ref.child(p), oldData[p], newValue);
-            } else if (newValue !== oldData[p]) { /* changed key */
-                updateObject[p] = newValue;
-            }
-
-        }
-
-        for (var p in oldData) { /* removed keys */
-            if (!(p in newData)) { updateObject[p] = null; }
-        }
-
-    }
-
-    if (Object.keys(updateObject).length) { ref.update(updateObject); }
-}
-
-MM.Backend.Horizon._listenStart = function(data, id) {
-    if (this._current.id && this._current.id == id) { return; }
-
-    this._listenStop();
-    this._current.id = id;
-    this._current.data = data;
-
-    this.ref.child("data/" + id).on("value", this._valueChange, this);
-}
-
-MM.Backend.Horizon._listenStop = function() {
-    if (!this._current.id) { return; }
-
-    this.ref.child("data/" + this._current.id).off("value");
-    this._current.id = null;
-    this._current.name = null;
-    this._current.data = null;
-}
-
-
-/**
- * Monitored remote ref changed.
- * FIXME move timeout logic to ui.backend.Horizon?
- */
-MM.Backend.Horizon._valueChange = function(snap) {
-    this._current.data = snap.val();
-    if (this._changeTimeout) { clearTimeout(this._changeTimeout); }
-    this._changeTimeout = setTimeout(function() {
-        MM.publish("horizon-change", this, this._current.data);
-    }.bind(this), 200);
-}
-
-MM.Backend.Horizon._login = function(type) {
-    var promise = new Promise();
-
-    var auth = new HorizonSimpleLogin(this.ref, function(error, user) {
-        if (error) {
-            promise.reject(error);
-        } else if (user) {
-            promise.fulfill(user);
-        }
-    });
-    auth.login(type);
-
-    return promise;
-}
-
-
-
+*/
 
 MM.UI = function() {
     this._node = document.querySelector(".ui");
@@ -3529,7 +2605,7 @@ MM.UI.prototype.handleMessage = function(message, publisher) {
 MM.UI.prototype.handleEvent = function(e) {
     switch (e.type) {
         case "click":
-            if (e.target.nodeName.toLowerCase() != "select") { MM.Clipboard.focus(); } /* focus the clipboard (2c) */
+            if (e.target.nodeName.toLowerCase() != "select") { MM.Clipboard.focus(); } // focus the clipboard (2c) 
 
             if (e.target == this._toggle) {
                 this.toggle();
@@ -3548,7 +2624,7 @@ MM.UI.prototype.handleEvent = function(e) {
             break;
 
         case "change":
-            MM.Clipboard.focus(); /* focus the clipboard (2c) */
+            MM.Clipboard.focus(); // focus the clipboard (2c) 
             break;
     }
 }
@@ -3646,8 +2722,6 @@ MM.UI.Value = function() {
 MM.UI.Value.prototype.update = function() {
     var value = MM.App.current.getValue();
     if (value === null) { value = ""; }
-//    if (typeof(value) == "number") { value = "num" }
-
     this._select.value = value;
 }
 
@@ -3736,7 +2810,6 @@ MM.UI.Help.prototype.toggle = function() {
 
 MM.UI.Help.prototype._build = function() {
     var t = this._node.querySelector(".navigation");
-    //this._buildRow(t, "Pan");
     this._buildRow(t, "Select");
     this._buildRow(t, "SelectRoot");
     this._buildRow(t, "SelectParent");
@@ -3757,7 +2830,6 @@ MM.UI.Help.prototype._build = function() {
 
     var t = this._node.querySelector(".editing");
     this._buildRow(t, "Value");
-    //this._buildRow(t, "Yes", "No", "Computed");
     this._buildRow(t, "Edit");
     this._buildRow(t, "Newline");
     //this._buildRow(t, "Bold");
@@ -3806,25 +2878,26 @@ MM.UI.Help.prototype._formatKey = function(key) {
 MM.UI.IO = function() {
     this._prefix = "mm.app.";
     this._mode = "";
-    this._node = document.querySelector("#io");
-    this._heading = this._node.querySelector("h3");
+    //this._node = document.querySelector("#io");
+    //this._heading = this._node.querySelector("h3");
 
-    this._backend = this._node.querySelector("#backend");
-    this._currentBackend = null;
-    this._backends = {};
-	var ids = ["file", "horizon"];
-    ids.forEach(function(id) {
-        var ui = MM.UI.Backend.getById(id);
-        ui.init(this._backend);
-        this._backends[id] = ui;
-    }, this);
+    //this._backend = this._node.querySelector("#backend");
+    //this._currentBackend = null;
+    //this._backends = {};
+	//var ids = ["file", "horizon"];
+	//var ids = ["file"];
+    //ids.forEach(function(id) {
+     //   var ui = MM.UI.Backend.getById(id);
+    //    ui.init(this._backend);
+    //    this._backends[id] = ui;
+    //}, this);
 
-    this._backend.value = localStorage.getItem(this._prefix + "backend") || MM.Backend.File.id;
-    this._backend.addEventListener("change", this);
+    //this._backend.value = localStorage.getItem(this._prefix + "backend") || MM.Backend.File.id;
+    //this._backend.addEventListener("change", this);
 
-    MM.subscribe("map-new", this);
-    MM.subscribe("save-done", this);
-    MM.subscribe("load-done", this);
+    //MM.subscribe("map-new", this);
+    //MM.subscribe("save-done", this);
+    //MM.subscribe("load-done", this);
 }
 
 //http://oskarhane.com/create-a-nested-array-recursively-in-javascr
@@ -3851,7 +2924,7 @@ function buildHierarchy(arry) {
 }
 
 MM.UI.IO.prototype.restore = function() {
-	//console.log("Initial loading");
+	//INITIAL LOADING
     var parts = {};
     location.search.substring(1).split("&").forEach(function(item) {
         var keyvalue = item.split("=");
@@ -3860,143 +2933,125 @@ MM.UI.IO.prototype.restore = function() {
 
     if ("id" in parts) { 
 		parts.mapname = parts.id;
-		var backend = MM.UI.Backend.getById("horizon");
-		if (backend) { 
-			const hz = new Horizon();
-			const hzdata = hz(parts.mapname);
-			let root;
-			hzdata.order("order").fetch().subscribe((items) => {
-			//hzdata.fetch().subscribe((items) => {
-				var options = {
-					childKey  : 'id',
-					parentKey : 'pid',
-					nodeText  : 'text',
-					nodeOrder : 'order'
-				};
-				
-				//var tree = walkTree(listToTree(items, options), pruneChildren);
-				var tree = buildHierarchy(items);
-				var stree = JSON.stringify(tree, null, 2);
-				stree = "{\"root\":{\n\"layout\": \"graph-right\",\n\"shape\": \"ellipse\","+stree.substr(1).slice(4, -1)+"}";
-				try {
-					var json = MM.Format.JSON.from(stree);
-				} catch (e) {
-					this._error(e);
-				}
-				MM.UI.Backend._loadDone.call(this, json);
-			});
-			
-            /* ### Hook to changefeed */
+		const hz = new Horizon();
+		const hzdata = hz(parts.mapname);
+		let root;
+		hzdata.order("order").fetch().subscribe((items) => {
+		//hzdata.fetch().subscribe((items) => {
+			var options = {
+				childKey  : 'id',
+				parentKey : 'pid',
+				nodeText  : 'text',
+				nodeOrder : 'order'
+			};
+			var tree = buildHierarchy(items);
+			var stree = JSON.stringify(tree, null, 2);
+			stree = "{\"root\":{\n\"layout\": \"graph-right\",\n\"shape\": \"ellipse\","+stree.substr(1).slice(4, -1)+"}";
+			try {
+				var json = MM.Format.JSON.from(stree);
+			} catch (e) {
+				this._error(e);
+			}
+			MM.UI.Backend._loadDone.call(this, json);
+		});
+		
+		/* ### Hook to changefeed */
 //TODO?: filter out changes by self (hzdata.filter({usr: bob}).watch...
-			hzdata.watch({rawChanges: true}).subscribe((item) => {	
-				if (item.type == 'add'){
-					//ADDITION FROM PEER
-					console.log("NOTIFICATION OF CHANGE: " + item.type);
-					console.log("NOTIFICATION OF CHANGE (DETAILS): " + item);
-					console.log(item);
+		hzdata.watch({rawChanges: true}).subscribe((item) => {	
+			if (item.type == 'add'){
+				//PEER ADDED A NODE 
+				var root = MM.App.map._root;
+				var hasNodeToAdd = findNode(item.new_val.id, root);
+				if (hasNodeToAdd == true) {
+					var parentNode = findNode(item.new_val.pid, root);
+					var action = new MM.Action.InsertNewItemFromPeer(item.new_val.id, parentNode, item.new_val.order + 1);
+					MM.App.action(action);
+				}else{
+				//We are the one behind that change. There is no need to update the UI
+				}
+			}
+			if (item.type == 'remove'){
+				//PEER DELETED A NODE 
+				var root = MM.App.map._root;
+				//navigate through all the nodes and their children		
+				var nodeToDelete = findNode(item.old_val.id, root);
+				if (nodeToDelete !== false) {
+					//Someone deleted a node. Let's reflect this change in the UI
+					var action = new MM.Action.RemoveItem(nodeToDelete);
+					MM.App.action(action);
+				}else{
+				//We are the one behind that change. There is no need to update the UI
+				}
+			}
+			if (item.type == 'change'){
+				
+				//PEER MODIFIED TEXT 
+				if (item.old_val.text != item.new_val.text){
 					var root = MM.App.map._root;
-					var hasNodeToAdd = findNode(item.new_val.id, root);
-					console.log(hasNodeToAdd);
-					if (hasNodeToAdd !== false) {
-						//We are the one who added it. So no action is required
-						console.log("I did it");
+					var NodeToChange = findNode(item.new_val.id, root);
+					if (NodeToChange._dom.text.innerHTML != item.new_val.text){
+						var action = new MM.Action.SetTextFromPeer(NodeToChange, item.new_val.text);
+						MM.App.action(action);
 					}else{
+					//We are the one behind that change. There is no need to update the UI
+					}
+				}
+				
+				//PEER MODIFIED PARENT
+				if (item.old_val.pid != item.new_val.pid){
+					var root = MM.App.map._root;
+					var NodeToChange = findNode(item.new_val.id, root);
+					
+					if (item.new_val.pid !== NodeToChange._parent._id){
 						var parentNode = findNode(item.new_val.pid, root);
-						var action = new MM.Action.InsertNewItemFromPeer(item.new_val.id, parentNode, item.new_val.order + 1);
-						MM.App.action(action);
-					}
-				}
-				if (item.type == 'remove'){
-					//DELETION FROM PEER
-					var root = MM.App.map._root;
-					//navigate through all the nodes and their children		
-					var nodeToDelete = findNode(item.old_val.id, root);
-					if (nodeToDelete !== false) {
-						//Someone deleted a node. Let's reflect this change in the UI
-						var action = new MM.Action.RemoveItem(nodeToDelete);
+						var action = new MM.Action.MoveItemFromPeer(NodeToChange, parentNode, item.new_val.order - 1);
 						MM.App.action(action);
 					}else{
-						//We are the one behind that change. There is no need to update the UI
+					//We are the one behind that change. There is no need to update the UI
 					}
 				}
-				if (item.type == 'change'){
-//TODO: build code to integrate change from the feed
-					console.log("NOTIFICATION OF CHANGE: " + item.type);
-					console.log("NOTIFICATION OF CHANGE (DETAILS): " + item);
-					if (item.old_val.text != item.new_val.text){
-						//TEXT CHANGED FROM PEER
-						var root = MM.App.map._root;
-						var NodeToChange = findNode(item.new_val.id, root);
-//console.log(item); 
-console.log(item.new_val.id);
-console.log(root);
-console.log("io io");
-console.log(NodeToChange);
-//console.log(NodeToChange._dom.text.innerHTML);
-//console.log(item.new_val.text);
-
-						if (NodeToChange._dom.text.innerHTML != item.new_val.text){
-							var action = new MM.Action.SetTextFromPeer(NodeToChange, item.new_val.text);
-							MM.App.action(action);
-						}else{
-						//We are the one behind that change. There is no need to update the UI
-					}
-					}
-					if (item.old_val.pid != item.new_val.pid){
-						//PARENT CHANGED FROM PEER
-						console.log("changement de parent"); 
-					}
-					if (item.old_val.order != item.new_val.order){
-						//Order changed
-						console.log("changement d'ordre"); 
-					}
-					/*
-					Example
-					--------
-					new_val
-					  id: "ulobyyow"
-​​					  order: 1
-​​					  pid: "fdqnevfj"
-​​					  text: "a"
-​					old_val
-					  id: "ulobyyow"
-​​					  order: 1
-​​					  pid: "fdqnevfj"
-​​					  text: "fffffffffff"
-					*/
+				
+				//PEER MODIFIED ORDER
+				if (item.old_val.order != item.new_val.order){
+					var root = MM.App.map._root;
+					var NodeToChange = findNode(item.new_val.id, root);
+					if (item.new_val.id !== NodeToChange._parent._children[item.new_val.order - 1]._id){
+						var action = new MM.Action.MoveItemFromPeer(NodeToChange, NodeToChange.getParent(), item.new_val.order - 1);
+						MM.App.action(action);				
+					}else{
+					//We are the one behind that change. There is no need to update the UI
+					}						
 				}
-			});
-			
-			const hzhist = hz(parts.mapname + 'History');
+			}
+		});
+		
+		const hzhist = hz(parts.mapname + 'History');
 //On a tenté de filtré à la source mais ça ne semb;le pas possible
 //On utilisera plutôt une logique front-end
 /*
-			//hzhist.watch().subscribe((item) => {			
-			hzhist.find(
-			  function (doc) {
-				return r.expr(["menInCrust"])
-				.contains(doc("userId"))
-				.not();
-			  }
-			).watch.subscribe((item) => {
+		//hzhist.watch().subscribe((item) => {			
+		hzhist.find(
+		  function (doc) {
+			return r.expr(["menInCrust"])
+			.contains(doc("userId"))
+			.not();
+		  }
+		).watch.subscribe((item) => {
 */			
-			//chat.find({author: "@dalanmiller"}).watch()
+		//chat.find({author: "@dalanmiller"}).watch()
 //TODO: try to filter out the feed of our own changes
-			hzhist.watch({rawChanges: true}).subscribe((item) => {
-				//console.log(item.new_val.userId);
-				//console.log(item.new_val.actionType);
-				//if (item.new_val.userId != "youngAsFuck") {//actualUser)...
-					if (item.type == 'add'){
+		hzhist.watch({rawChanges: true}).subscribe((item) => {
+			//console.log(item.new_val.userId);
+			//console.log(item.new_val.actionType);
+			//if (item.new_val.userId != "youngAsFuck") {//actualUser)...
+				if (item.type == 'add'){
 //						console.log(item);
 //						console.log(item.new_val);
-					}
-				//}
-			});
-			//backend.setState(parts);
-			return;
-		}
-	} else { 
-		//404
+				}
+			//}
+		});
+		//backend.setState(parts);
+		return;
 	}
 }
 
@@ -4022,25 +3077,6 @@ function findNode(id, currentNode) {
 		return false;    
 	}
 }
-
-/*
-function locateNode(node, nodeNm){
-	console.log("A: " + node);
-	for (var i = 0; i < node._children.length && locatedNode === undefined; i++){
-		console.log("B: " + node._children);
-		var child = node._children[i];
-		locateNode(child, nodeNm);
-		console.log("C: " + child._id + " " + nodeNm);
-		if (child._id == nodeNm){
-			console.log("Yep");
-			var locatedNode = child;
-		}
-	}
-	if (locatedNode !== "undefined"){
-		console.log(locatedNode);
-	}
-}
-*/
 
 MM.UI.IO.prototype.handleMessage = function(message, publisher) {
     switch (message) {
@@ -4133,12 +3169,6 @@ MM.UI.Backend.init = function(select) {
     this._prefix = "mm.app." + this.id + ".";
 
     this._node = document.querySelector("#" + this.id);
-
-//    this._cancel = this._node.querySelector(".cancel");
-//    this._cancel.addEventListener("click", this);
-
-//    this._go = this._node.querySelector(".go");
-//    this._go.addEventListener("click", this);
 
     select.appendChild(this._backend.buildOption());
 }
@@ -4234,242 +3264,8 @@ MM.UI.Backend._buildList = function(list, select) {
         select.appendChild(o);
     });
 }
-MM.UI.Backend.File = Object.create(MM.UI.Backend, {
-    id: { value: "file" }
-});
 
-MM.UI.Backend.File.init = function(select) {
-    MM.UI.Backend.init.call(this, select);
-
-    this._format = this._node.querySelector(".format");
-    this._format.appendChild(MM.Format.JSON.buildOption());
-    this._format.appendChild(MM.Format.FreeMind.buildOption());
-    this._format.appendChild(MM.Format.MMA.buildOption());
-    this._format.appendChild(MM.Format.Mup.buildOption());
-    this._format.appendChild(MM.Format.Plaintext.buildOption());
-    this._format.value = localStorage.getItem(this._prefix + "format") || MM.Format.JSON.id;
-}
-
-MM.UI.Backend.File.show = function(mode) {
-    MM.UI.Backend.show.call(this, mode);
-
-    this._go.innerHTML = (mode == "save" ? "Save" : "Browse");
-}
-
-MM.UI.Backend.File._action = function() {
-    localStorage.setItem(this._prefix + "format", this._format.value);
-
-    MM.UI.Backend._action.call(this);
-}
-
-MM.UI.Backend.File.save = function() {
-    var format = MM.Format.getById(this._format.value);
-    var json = MM.App.map.toJSON();
-    var data = format.to(json);
-
-    var name = MM.App.map.getName() + "." + format.extension;
-    this._backend.save(data, name).then(
-        this._saveDone.bind(this),
-        this._error.bind(this)
-    );
-}
-
-MM.UI.Backend.File.load = function() {
-    this._backend.load().then(
-        this._loadDone.bind(this),
-        this._error.bind(this)
-    );
-}
-
-MM.UI.Backend.File._loadDone = function(data) {
-    try {
-        var format = MM.Format.getByName(data.name) || MM.Format.JSON;
-        var json = format.from(data.data);
-    } catch (e) {
-        this._error(e);
-    }
-
-    MM.UI.Backend._loadDone.call(this, json);
-}
-
-MM.UI.Backend.Horizon = Object.create(MM.UI.Backend, {
-    id: { value: "horizon" }
-});
-
-MM.UI.Backend.Horizon.init = function(select) {
-    MM.UI.Backend.init.call(this, select);
-
-    this._online = false;
-    this._itemChangeTimeout = null;
-    MM.subscribe("horizon-list", this);
-    MM.subscribe("horizon-change", this);
-}
-
-MM.UI.Backend.Horizon.setState = function(data) {
-    this._connect(data.s, data.a).then(
-        this._load.bind(this, data.id),
-        this._error.bind(this)
-    );
-}
-
-MM.UI.Backend.Horizon.getState = function() {
-    var data = {
-        id: MM.App.map.getId(),
-        b: this.id,
-        s: this._server.value
-    };
-    if (this._auth.value) { data.a = this._auth.value; }
-    return data;
-}
-
-MM.UI.Backend.Horizon.show = function(mode) {
-    MM.UI.Backend.show.call(this, mode);
-    this._sync();
-}
-
-MM.UI.Backend.Horizon.handleEvent = function(e) {
-    MM.UI.Backend.handleEvent.call(this, e);
-
-    switch (e.target) {
-        case this._remove:
-            var id = this._list.value;
-            if (!id) { break; }
-            MM.App.setThrobber(true);
-            this._backend.remove(id).then(
-                function() { MM.App.setThrobber(false); },
-                this._error.bind(this)
-            );
-            break;
-    }
-}
-
-MM.UI.Backend.Horizon.handleMessage = function(message, publisher, data) {
-    switch (message) {
-        case "horizon-list":
-            this._list.innerHTML = "";
-            if (Object.keys(data).length) {
-                this._buildList(data, this._list);
-            } else {
-                var o = document.createElement("option");
-                o.innerHTML = "(no maps saved)";
-                this._list.appendChild(o);
-            }
-            this._sync();
-            break;
-
-        case "horizon-change":
-            if (data) {
-                MM.unsubscribe("item-change", this);
-                MM.App.map.mergeWith(data);
-                MM.subscribe("item-change", this);
-            } else { /* FIXME */
-                console.log("remote data disappeared");
-            }
-            break;
-
-        case "item-change":
-            if (this._itemChangeTimeout) { clearTimeout(this._itemChangeTimeout); }
-            this._itemChangeTimeout = setTimeout(this._itemChange.bind(this), 200);
-            break;
-    }
-}
-
-MM.UI.Backend.Horizon.reset = function() {
-    this._backend.reset();
-    MM.unsubscribe("item-change", this);
-}
-
-MM.UI.Backend.Horizon._itemChange = function() {
-    var map = MM.App.map;
-    this._backend.mergeWith(map.toJSON(), map.getName());
-}
-
-MM.UI.Backend.Horizon._action = function() {
-    if (!this._online) {
-        this._connect(this._server.value, this._auth.value);
-        return;
-    }
-
-    MM.UI.Backend._action.call(this);
-}
-
-MM.UI.Backend.Horizon.save = function() {
-    MM.App.setThrobber(true);
-
-    var map = MM.App.map;
-    this._backend.save(map.toJSON(), map.getId(), map.getName()).then(
-        this._saveDone.bind(this),
-        this._error.bind(this)
-    );
-}
-
-MM.UI.Backend.Horizon.load = function() {
-    this._load(this._list.value);
-}
-
-MM.UI.Backend.Horizon._load = function(id) {
-    MM.App.setThrobber(true);
-    /* FIXME posere se kdyz zmenim jeden horizon na jiny, mozna */
-    this._backend.load(id).then(
-        this._loadDone.bind(this),
-        this._error.bind(this)
-    );
-}
-
-MM.UI.Backend.Horizon._connect = function(server, auth) {
-    var promise = new Promise();
-
-    this._server.value = server;
-    this._auth.value = auth;
-    this._server.disabled = true;
-    this._auth.disabled = true;
-
-    localStorage.setItem(this._prefix + "server", server);
-    localStorage.setItem(this._prefix + "auth", auth || "");
-
-    this._go.disabled = true;
-    MM.App.setThrobber(true);
-
-    this._backend.connect(server, auth).then(
-        function() {
-            this._connected();
-            promise.fulfill();
-        }.bind(this),
-        promise.reject.bind(promise)
-    );
-
-    return promise;
-}
-
-MM.UI.Backend.Horizon._connected = function() {
-    MM.App.setThrobber(false);
-    this._online = true;
-    this._sync();
-}
-
-MM.UI.Backend.Horizon._sync = function() {
-    if (!this._online) {
-        this._go.innerHTML = "Connect";
-        return;
-    }
-
-    //this._go.disabled = false;
-    if (this._mode == "load" && !this._list.value) { this._go.disabled = true; }
-    this._go.innerHTML = this._mode.charAt(0).toUpperCase() + this._mode.substring(1);
-}
-
-MM.UI.Backend.Horizon._loadDone = function() {
-    MM.subscribe("item-change", this);
-    MM.UI.Backend._loadDone.apply(this, arguments);
-}
-
-MM.UI.Backend.Horizon._saveDone = function() {
-    MM.subscribe("item-change", this);
-    MM.UI.Backend._saveDone.apply(this, arguments);
-}
-
-
-MM.UI.Backend.File.storeRethinkDBFromJson = function(flag, tmp) {
+MM.UI.Backend.storeRethinkDBFromJson = function(flag, tmp) {
     var historyMessage;
 	const hz = new Horizon();
     const hzNodes = hz("nodes");
@@ -4479,23 +3275,11 @@ MM.UI.Backend.File.storeRethinkDBFromJson = function(flag, tmp) {
     switch (flag) {
         case "InsertNewItem":
             historyMessage = "UI: New node created";
-			//console.log(historyMessage);
-			//console.log(tmp._item);
-			//console.log(tmp._parent._id);
-//			console.log("ParentID: " + tmp._newParent._id);
-//			console.log("ParentMsg: " + tmp._newParent._text);
-
-			//console.log("NodeID: " + tmp._item._id);
-			//if oldText = "" then new node
 			hzNodes.store({ "id": tmp._item._id, "text": "", "pid": tmp._parent._id, "order": tmp._index + 1 });
 			hzNodeHistory.store({ userId: "newBornKing", "actionType": 1, "nid": tmp._item._id, "order": tmp._index + 1, "DateTime": new Date() });
             break;
         case "EditText":
             historyMessage = "UI: Node modified";
-			//console.log(historyMessage);
-			//console.log("NodeID: " + tmp._item._id);
-			//console.log("Before: " + tmp._oldText); //if oldText = "" then new node
-			//console.log("After: " + tmp._text);
 			if (tmp._oldText != tmp._text) {
 				hzNodes.update({ "id": tmp._item._id, "text": tmp._text });
 				hzNodeHistory.store({ userId: "l'editeux", "actionType": 2, "nid": tmp._item._id, "oldValue": tmp._oldText, "newValue": tmp._text,  "DateTime": new Date() });
@@ -4503,14 +3287,10 @@ MM.UI.Backend.File.storeRethinkDBFromJson = function(flag, tmp) {
 			break;
         case "MoveItem":
             historyMessage = "UI: Node is moved";
-			//console.log(historyMessage);
-			//console.log("NodeID: " + tmp._item._id);
 			const oldIndex = tmp._oldIndex;
 			var newIndex = tmp._newIndex; 
 			//in certain cases, it's null. God knows why
 			if (newIndex == null) {
-				//console.log(tmp._newParent.getChildren().indexOf(tmp))
-				//console.log(tmp.getParent().getChildren().indexOf(tmp._item)
 				var children = tmp._newParent.getChildren();
 				for (var i = 0; i < children.length; i++) {
 					if (children[i].getId() == tmp._item._id) {
@@ -4518,18 +3298,15 @@ MM.UI.Backend.File.storeRethinkDBFromJson = function(flag, tmp) {
 					}
 			    }
 			}
-			//console.log('Old position: ' + (oldIndex + 1));
-			//console.log('New position: ' + (newIndex + 1));
 			if (tmp._oldParent._id != tmp._newParent._id) {
 				//update old parent nodes
 				var children = tmp._oldParent.getChildren();
 				for (var i = oldIndex; i < children.length; i++) {
-					console.log("text: " + children[i]._dom.text.innerHTML + "  id:" + children[i]._id + "  order:" + (i + 1));
+					children[i]._id + "  order:" + (i + 1));
 					hzNodes.update({ "id": children[i]._id, "order": i + 1 });
 					hzNodeHistory.store({ userId: "nobodyMoveLikePatrick", "actionType": 30, "nid": children[i]._id, "newValue": i + 1, "DateTime": new Date() });
 			    }
 				//update new parent nodes
-				//console.log('New parent: ' + tmp._newParent._id);
 				var children = tmp._newParent.getChildren();				
 				for (var i = newIndex; i < children.length; i++) {
 					if (children[i]._id == tmp._item._id) {
@@ -4555,8 +3332,6 @@ MM.UI.Backend.File.storeRethinkDBFromJson = function(flag, tmp) {
             break;			
         case "Delete":
             historyMessage = "UI: Node deleted";
-			//console.log(historyMessage);
-			//console.log("DELETE: " + tmp._item._dom.text.innerHTML);
 			hzNodes.remove({id: tmp._item._id})
 			hzNodeHistory.store({ userId: "deal(ete)Breaaaker", "actionType": 4, "nid": tmp._item._id, "DateTime": new Date() });
 			//DELETE CHILD
@@ -4595,21 +3370,6 @@ function allDescendants(flag, node, nodesTbl, nodesHistoryTbl) {
 		}
     }
 }
-
-/*
-function recurseDel(el, descendants) {
-	var children = el._children;
-	for(i=0; i < children.length; i++) {
-		//descendants.push(el._id);
-		recurseDel(children[i]);
-		descendants.push(el);
-		console.log("DELETE: " + children[i]._dom.text.innerHTML);
-		//hzNodes.remove({id: tmp._item._id})
-		//hzNodeHistory.store({ userId: "deal(ete)Breaaaker", "actionType": 4, "nid": tmp._item._id, "DateTime": new Date() });
-			
-	}	
-}
-*/
 
 MM.Mouse = {
     TOUCH_DELAY: 500,
