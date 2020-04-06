@@ -15,6 +15,8 @@ User identification
   https://oauth.net/articles/authentication
 
 NEXT
-Prepare Horizon configuration for depoyment in roduction
+Prepare for depoyment in production
+ Horizon
   http://web.archive.org/web/20171116120650/http://horizon.io/docs/cli/
-
+ RethinkDB
+  https://rethinkdb.com/docs/start-a-server/
