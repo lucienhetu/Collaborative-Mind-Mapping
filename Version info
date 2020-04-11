@@ -9,6 +9,7 @@ Remember open nodes > Save state
   ToBeDevelopped: Restore state
 
 v0.4.2
+IU > default to open collapsed
 Click behavior > I changed smtg, can't remember what I changed
 Double-click behavior > triggers edit mode
 Node size > A maximum width is enforced for nodes
