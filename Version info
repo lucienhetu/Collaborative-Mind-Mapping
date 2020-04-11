@@ -8,6 +8,15 @@ Consume data from changefeed
 Remember open nodes > Save state 
   ToBeDevelopped: Restore state
 
+v0.4.2
+Click behavior > I changed smtg, can't remember what I changed
+Double-click behavior > triggers edit mode
+Node size > A maximum width is enforced for nodes
+Drag behavior > Drag over node doesn't select it anymore
+Bug > Dragging of multi-lines node is inaccurate
+Bug > Node > Multi-lines > not well align with the line
+Bug > Node > Multi-lines > sub-nodes are not attached
+
 v0.5
 User identification
   http://web.archive.org/web/20171119002424/http://horizon.io/docs/auth
