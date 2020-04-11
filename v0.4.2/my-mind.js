@@ -77,7 +77,7 @@ var MM = {
 MM.Item = function() {
     this._parent = null;
     this._children = [];
-    this._collapsed = false;
+    this._collapsed = true;
 
     this._layout = null;
     this._shape = null;
@@ -288,7 +288,7 @@ MM.Item.prototype.update = function(doNotRecurse) {
     this.getLayout().update(this);
     this.getShape().update(this);
     if (!this.isRoot() && !doNotRecurse) { this._parent.update(); }
-
+    if (this.isRoot()) { this.expand(); }
     return this;
 }
 
