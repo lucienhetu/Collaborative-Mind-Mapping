@@ -35,10 +35,9 @@ TODO LIST
   - Preference
     - [ ] Remember open nodes
       - [x] Save state
-      - [ ] Load state
+      - [ ] Load state on initial page loading
 * Contribution mgmt
   - [ ] Concurrency mgmt
   - [ ] Node stages (draft, from draft to accepted, challenge accepted, ACL, Branching)
-  
   
 ![Screenshot](screenshot.png)
