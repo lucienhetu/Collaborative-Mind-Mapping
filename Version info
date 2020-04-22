@@ -21,6 +21,7 @@ Bug > Node > Multi-lines > sub-nodes are not attached
 v0.5
 User identification
  Collab page: redirect it not auth to a pag where the user will choose the authentication provider
+ Github doesn't support this method anymore. Explore the workaround (https://developer.github.com/changes/2020-02-10-deprecating-auth-through-query-param/)
  Doc
   http://web.archive.org/web/20171119002424/http://horizon.io/docs/auth
   http://web.archive.org/web/20171116120650/http://horizon.io/docs/cli/
