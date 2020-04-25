@@ -20,7 +20,8 @@ Bug > Node > Multi-lines > sub-nodes are not attached
 
 v0.5
 User identification
- Add auth provider: https://www.google.com/search?q=site:auth0.com/docs/connections/social/
+ https://github.com/rethinkdb/horizon-docs/blob/master/authentication.md
+  Add auth provider: https://www.google.com/search?q=site:auth0.com/docs/connections/social/
  Collab page: redirect it not auth to a pag where the user will choose the authentication provider
  Fix bugs: Github will soon not support this method anymore. Explore the workaround (https://developer.github.com/changes/2020-02-10-deprecating-auth-through-query-param/)
  Doc
