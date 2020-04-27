@@ -5,7 +5,7 @@ My Mind is a web application for creating and managing mind maps. It is free to 
 
 
 * Get started : https://github.com/lucienhetu/my-mind/wiki
-* Documentation : We are not there yet. There is a bit of info here and [there](https://www.pluralsight.com/guides/building-a-real-time-application-with-react-react-router-horizon-io-and-oauth) over the web
+* Documentation : We are not there yet. There is a bit of info [here](http://web.archive.org/web/20170926222132/http://horizon.io/docs/) and [there](https://www.pluralsight.com/guides/building-a-real-time-application-with-react-react-router-horizon-io-and-oauth) over the web
 * News / Changelog : https://github.com/lucienhetu/Collaborative-Mind-Mapping/blob/master/Version%20info
 * Found a bug or have a feature request? [Open an issue.](https://github.com/lucienhetu/my-mind/issues)
 * Have an improvement? [Submit a pull request.](https://github.com/lucienhetu/my-mind/pulls)
