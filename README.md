@@ -25,20 +25,24 @@ TODO LIST
 * Users mgmt
   - Onboarding
     - Adhesion  
-      - [ ] Create the forms for adhesion
+      - [x] Create the forms for adhesion
       - [ ] Integrate ID into nodes authorship (for internal reference)
-      - [ ] Username
-        - block offensive?
-    - [ ] Create document for new users
+      - [x] Username
   - Authentication
-    - [ ] Create the forms for authentication
-    - [ ] Support majors authentication providers (OpenAuth, Facebook, Google, ...)
+    - [x] Support majors authentication providers (OpenAuth, Facebook, Google, ...)
   - Preference
-    - [ ] Remember open nodes
+    - [x] Remember open nodes
       - [x] Save state
-      - [ ] Load state on initial page loading
+      - [x] Load state on initial page loading
 * Contribution mgmt
-  - [ ] Concurrency mgmt
+  - [x] Concurrency mgmt
   - [ ] Node stages (draft, from draft to accepted, challenge accepted, ACL, Branching)
+* Improve
+  - [ ] Clean code
+    - [ ] Remove elements not used
+    - [ ] Rewrite what was quicly written
+  - [ ] Ajust permissions (.anyWrite()) and indexes under schema.toml
+  - [ ] Upgrade to rethinkdb 2.4.0
+  - [ ] Evaluate if JIT node loading improve performance
   
 ![Screenshot](screenshot.png)
