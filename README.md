@@ -26,7 +26,6 @@ TODO LIST
   - Onboarding
     - Adhesion  
       - [x] Create the forms for adhesion
-      - [ ] Integrate ID into nodes authorship (for internal reference)
       - [x] Username
   - Authentication
     - [x] Support majors authentication providers (OpenAuth, Facebook, Google, ...)
@@ -36,6 +35,7 @@ TODO LIST
       - [x] Load state on initial page loading
 * Contribution mgmt
   - [x] Concurrency mgmt
+  - [x] Integrate ID into nodes authorship (for internal reference)
   - [ ] Node stages (draft, from draft to accepted, challenge accepted, ACL, Branching)
 * Improve
   - [ ] Clean code
