@@ -1,6 +1,7 @@
 v0.4
 Store data in a local database > Integrate web app with RethinkDB
 Realtime collaboration capabilities > Changes are pushed to clients
+Multiline
 
 v0.4.1
 Got rid of some unused functions
@@ -28,5 +29,11 @@ User identification
   http://web.archive.org/web/20171119002424/http://horizon.io/docs/auth
   http://web.archive.org/web/20171116120650/http://horizon.io/docs/cli/
   https://oauth.net/articles/authentication
+ Save folding state
+ Implemented permissions
+ 
+v0.5.1
+Clean a bit code (remove loading of history, which brought no value), load previous folding state
+
 
 NOTE: v0.4.x will work out of the box. v0.5.x and earlier need some tuning to personalized authentication
