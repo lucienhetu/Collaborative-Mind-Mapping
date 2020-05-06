@@ -29,9 +29,4 @@ User identification
   http://web.archive.org/web/20171116120650/http://horizon.io/docs/cli/
   https://oauth.net/articles/authentication
 
-NEXT
-Prepare for depoyment in production
- Horizon
-  http://web.archive.org/web/20171116120650/http://horizon.io/docs/cli/
- RethinkDB
-  https://rethinkdb.com/docs/start-a-server/
+NOTE: v0.4.x will work out of the box. v0.5.x and earlier need some tuning to personalized authentication
