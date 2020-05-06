@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1.0" />
+    <script src="/horizon/horizon.js"></script>
+    <script src="my-mind.js"></script>
+    <link rel="stylesheet" href="css/font.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/print.css" media="print" />
+    <base target="_blank" />
+</head>
+
+<body>
+	<div style="z-index: -1;background-color:gray;display: none;height: 100vh;" id="auth"><p>CHoose auth provider</p><ul><li id="github">Github</li><li id="google">Google</li></ul></div>
+    <div style="z-index: -1;background-color:gray;display: none;height: 100vh;color: #e8e6e3;" id="usr"><p>Almost there</p><p>nickname : <input type="text" id="nickname"></p><p>email : <input type="text" id="email"></p><input type="button" id="usrSubmit" value="Submit"><p></p></div>
+    <div class="ui"></div>
+
+	<script>
+		 window.onload = function() {
+			//Authentication
+			document.getElementById("github").onclick = function() {
+				horizon.authEndpoint('github').subscribe((endpoint) => {window.location.replace(endpoint);});
+			};
+			document.getElementById("google").onclick = function() {
+				horizon.authEndpoint('google').subscribe((endpoint) => {window.location.replace(endpoint);});
+			};
+			//User information
+			document.getElementById("usrSubmit").onclick = function(){
+				var nickNm = document.getElementById("nickname").value;
+				var emailAdr = document.getElementById("email").value;
+				//TODO: add logic to check if fields are filled and valid
+				//TODO: propose nicknames - ex. https://github.com/jamo/nick-generator, https://github.com/nbrylevv/username-generator
+				console.log(cUsr);
+				horizon('users').update({
+					id: cUsr.id,
+					nicknm: nickNm,
+					email: emailAdr
+				});	
+				//TODO: add logic to check if the nickname and email are appropriate
+				//TODO: add logic to check if the person really owns the email
+				document.getElementById("auth").style.display = "none";
+				//document.getElementById("ui").style.display = "block";
+				horizon("nodes").order("order").fetch().subscribe((result) => { 
+					console.log(result); 
+					}
+				);
+			}; 
+			
+			const horizon = new Horizon({ authType: 'token' });
+			var cUsr;
+		  
+			//Horizon.clearAuthTokens()
+			if (!horizon.hasAuthToken()) {
+				document.getElementById("auth").style.display = "block";
+				//document.getElementById("ui").style.display = "none";
+			} else {
+				//The user is authenticated 
+				//WORKAROUND: Authenticator doesn't redirect at the right address, we make sure we are at the right address before going further
+				if (location.search.split('horizon_token=')[1] === undefined) {
+					//Check if first time login
+					//note: we don't get a name/username from oauth. we gonna need to create one. ref: https://github.com/rethinkdb/horizon-docs/blob/master/authentication.md#notes-about-horizons-oauth-support
+					//note: currently authenticated using the Horizon.hasAuthToken method, and access their information with Horizon.currentUser. https://support.arcx.com/horizon/api/horizon/#currentuser
+					//note: requires to add rights. ref: https://github.com/rethinkdb/horizon-docs/blob/master/api/horizon.md#horizoncurrentuser-currentuser
+					horizon.currentUser().fetch().subscribe(
+						(result) => { 
+							cUsr = result;
+							//console.log(cUsr); 
+							//console.log(cUsr.id);
+							//console.log(cUsr.nicknm);
+							if (cUsr.nicknm === undefined) {
+								console.log("createone");	
+								document.getElementById("usr").style.display = "block";
+								//document.getElementById("ui").style.display = "none";
+							} else {
+								console.log(cUsr.id);
+								/*
+								horizon("userPref").find(cUsr.id).fetch().subscribe((result) => { 
+									console.log(result); 
+									}
+								);
+								horizon("userPref").find({id: 'cUsr.id'}, {OpenNodes: 'pypqorqz'}).fetch().subscribe((result) => { 
+									console.log(result); 
+									}
+								);
+								*/
+								horizon("userPref").find(cUsr.id).fetch().subscribe(
+									(result) => { 
+										openNodes = result; 
+										console.log(openNodes);	
+										console.log(openNodes.OpenNodes);	
+										
+										//openNodes.OpenNodes.push('pypqorqa');
+										//horizon("userPref").upsert(openNodes);	
+										//openNodes.OpenNodes = openNodes.OpenNodes.filter(item => item !== 'pypqorqa');
+										//horizon("userPref").upsert(openNodes);
+									}
+								)
+							}
+						}
+					
+					);
+				} else {
+					//Authenticated but need to fix the URL
+					//window.location.replace("/?id=nodes");
+				}
+			}	
+        }
+
+	</script>
+
+
+</body>
+
+</html>
