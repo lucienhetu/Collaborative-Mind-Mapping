@@ -11,37 +11,47 @@ fields = [["order"]]
 
 [collections.nodesHistory]
 
+
 [groups.authenticated]
+
 [groups.authenticated.rules.contribution_history_suscribe]
 template = "collection('nodesHistory').watch()"
 [groups.authenticated.rules.contribution_history_write]
 template = "collection('nodesHistory').store(any())"
+
 [groups.authenticated.rules.nodes_suscribe]
 template = "collection('nodes').watch()"
 [groups.authenticated.rules.nodes_fetch]
 template = "collection('nodes').order('order').fetch()"
+[groups.authenticated.rules.nodes_create]
+template = "collection('nodes').store(any())"
 [groups.authenticated.rules.nodes_remove]
 template = "collection('nodes').remove(any())"
-[groups.authenticated.rules.nodes_replace]
-template = "collection('nodes').anyWrite()"
-#template = "collection('nodes').replace(any())"
-#template = "collection('nodes').replace({id: any(), text: any()})"
-#template = "collection('nodes').replace({pid: any(), order: any(), text: any()})"
-[groups.authenticated.rules.nodes_store]
-template = "collection('nodes').store(any())"
+[groups.authenticated.rules.nodes_change]
+template = "collection('nodes').update(any())"
+#[groups.authenticated.rules.nodes_changeparent]
+#template = "collection('nodes').update({pid: any()})"
+#[groups.authenticated.rules.nodes_changeorder]
+#template = "collection('nodes').update({order: any()})"
+#[groups.authenticated.rules.nodes_changetext]
+#template = "collection('nodes').update({text: any()})"
+#[groups.authenticated.rules.nodes_changeparentandorder]
+#template = "collection('nodes').update({pid: any(), order: any()})"
+
 [groups.authenticated.rules.foldStatusRead]
 template = "collection('userPref').find({id: userId()})"
-#[groups.authenticated.rules.foldStatusWriteFirst]
-#template = "collection('userPref').insert({id: userId(), openNodes: any()})"
-#[groups.authenticated.rules.foldStatusWrite]
-#template = "collection('userPref').replace({id: userId(), openNodes: any()})"
 [groups.authenticated.rules.foldStatusWrite]
-template = "collection('userPref').anyWrite()"
+template = "collection('userPref').upsert({id: userId(), OpenNodes: any()})"
+[groups.authenticated.rules.foldStatusDelete]
+template = "collection('userPref').remove({id: userId(), OpenNodes: any()})"
+
 [groups.authenticated.rules.read_own_info]
 template = "collection('users').find({id: userId()})"
 [groups.authenticated.rules.write_own_info]
 template = "collection('users').anyWrite()"
 
+
 [groups.admin]
+
 [groups.admin.rules.carte_blanche]
 template = "any()"

@@ -40,5 +40,7 @@ Clean a bit code (remove loading of history, which brought no value), load previ
 
 BACKLOG
 rethinkdb --no-http-admin
+https://rethinkdb.com/docs/backup/
+https://github.com/rethinkdb/horizon-docs/blob/master/permissions.md
 
 
