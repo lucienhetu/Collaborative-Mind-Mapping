@@ -41,8 +41,8 @@ TODO LIST
   - [ ] Clean code
     - [ ] Remove elements not used
     - [ ] Rewrite what was quicly written
-  - [ ] Ajust permissions (.anyWrite()) and indexes under schema.toml
-  - [ ] Upgrade to rethinkdb 2.4.0
+  - [x] Ajust permissions (.anyWrite()) and indexes under schema.toml
+  - [x] Upgrade to rethinkdb 2.4.0
   - [ ] Evaluate if JIT node loading improve performance
   
 ![Screenshot](screenshot.png)
