@@ -37,6 +37,6 @@ Clean a bit code (remove loading of history, which brought no value), load previ
 
 v0.5.2
 Fix Bug > Node > Multi-lines > sub-nodes are not attached
-
+Fix Bug > Node > Line doesn't break on long chain of characters, if you know what I meannnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
 
 NOTE: v0.4.x will work out of the box. v0.5.x and earlier need some tuning to personalized authentication
