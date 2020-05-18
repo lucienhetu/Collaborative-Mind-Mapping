@@ -38,16 +38,28 @@ v0.5.1
 Clean a bit code (remove loading of history, which brought no value), load previous folding state
 
 v0.5.2
-Improvements: UI sync, right arrow on folded node opens it
+Fix Bugs:
+- Node > Multi-lines > sub-nodes are not attached
+- Node > Line doesn't break on long chain of characters, if you know what I meannnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+Improvements: 
+- UI sync
+- right arrow on folded node opens it
  
 
 
+========
+ Notes
+========
+v0.4.x will work out of the box. v0.5.x and earlier need some tuning to personalized authentication
 
-BACKLOG
+
+=========
+ BACKLOG
+=========
 rethinkdb --no-http-admin
 https://rethinkdb.com/docs/backup/
 https://github.com/rethinkdb/horizon-docs/blob/master/permissions.md
-Fix: ctl z; fix tab; update Help menu; update menu served by visual left arrow
+Fix Bugs: ctl z; fix tab; update Help menu; update menu served by visual left arrow
 Improvements: right arrow on folded nodes doesn't select child node; fold all nodes; fold all subnodes; subscribe to smn's view (see selected node)
 
 

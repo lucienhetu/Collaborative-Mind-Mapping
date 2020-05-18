@@ -6,7 +6,7 @@ My Mind is a web application for creating and managing mind maps. It is free to 
 
 * Get started : https://github.com/lucienhetu/my-mind/wiki
 * Documentation : We are not there yet. There is a bit of info [here](http://web.archive.org/web/20170926222132/http://horizon.io/docs/) and [there](https://www.pluralsight.com/guides/building-a-real-time-application-with-react-react-router-horizon-io-and-oauth) over the web
-* News / Changelog : https://github.com/lucienhetu/Collaborative-Mind-Mapping/blob/master/Version%20info
+* News / Changelog : https://github.com/lucienhetu/Collaborative-Mind-Mapping/blob/master/versionInfo
 * Found a bug or have a feature request? [Open an issue.](https://github.com/lucienhetu/my-mind/issues)
 * Have an improvement? [Submit a pull request.](https://github.com/lucienhetu/my-mind/pulls)
 
@@ -41,8 +41,8 @@ TODO LIST
   - [ ] Clean code
     - [ ] Remove elements not used
     - [ ] Rewrite what was quicly written
-  - [ ] Ajust permissions (.anyWrite()) and indexes under schema.toml
-  - [ ] Upgrade to rethinkdb 2.4.0
+  - [x] Ajust permissions (.anyWrite()) and indexes under schema.toml
+  - [x] Upgrade to rethinkdb 2.4.0
   - [ ] Evaluate if JIT node loading improve performance
   
 ![Screenshot](screenshot.png)
