@@ -44,6 +44,7 @@ Fix Bugs:
 Improvements: 
 - UI sync
 - right arrow on folded node opens it
+- click to fold/unfold node (not limited to spacebar anymore)
  
 
 
