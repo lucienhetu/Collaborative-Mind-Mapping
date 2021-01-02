@@ -1,7 +1,7 @@
-My Mind, collaborative edition
+OpenMind, a collaborative edition of My Mind
 ===============================
 
-My Mind is a web application for creating and managing mind maps. It is free to use and you can fork its source code. It is distributed under the terms of the MIT license. This platform extend the original project (http://my-mind.github.io/).
+OpenMind is a web application for creating mind maps. It is free to use and you can fork its source code. It is distributed under the terms of the MIT license. This platform extend the original project (http://my-mind.github.io/). It makes use of Horizon and rethinkDB
 
 
 * Get started : https://github.com/lucienhetu/my-mind/wiki
